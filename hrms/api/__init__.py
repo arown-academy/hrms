@@ -438,15 +438,15 @@ def get_holidays_for_employee(employee: str) -> list[dict]:
 	return holidays
 
 
+
 @frappe.whitelist()
 def get_leave_approval_details(employee: str) -> dict:
 	frappe.has_permission("Employee", "read", employee, throw=True)
-	leave_approver, department = frappe.get_cached_value(
+	leave_approver, department, custom_leave_approver_l2, custom_leave_approver_l3 = frappe.get_cached_value(
 		"Employee",
 		employee,
-		["leave_approver", "department"],
+		["leave_approver", "department", "custom_leave_approver_l2", "custom_leave_approver_l3"],
 	)
-
 	if not leave_approver and department:
 		frappe.has_permission("Department", "read", department, throw=True)
 		leave_approver = frappe.db.get_value(
@@ -454,22 +454,28 @@ def get_leave_approval_details(employee: str) -> dict:
 			{"parent": department, "parentfield": "leave_approvers", "idx": 1},
 			"approver",
 		)
-
 	leave_approver_name = frappe.db.get_value("User", leave_approver, "full_name", cache=True)
+	custom_leave_approver_l2_name = frappe.db.get_value(
+		"User", custom_leave_approver_l2, "full_name", cache=True
+	)
+	custom_leave_approver_l3_name = frappe.db.get_value(
+		"User", custom_leave_approver_l3, "full_name", cache=True
+	)
 	department_approvers = get_department_approvers(department, "leave_approvers")
-
 	if leave_approver and leave_approver not in [approver.name for approver in department_approvers]:
 		department_approvers.append({"name": leave_approver, "full_name": leave_approver_name})
-
 	return dict(
 		leave_approver=leave_approver,
 		leave_approver_name=leave_approver_name,
+		custom_leave_approver_l2=custom_leave_approver_l2,
+		custom_leave_approver_l2_name=custom_leave_approver_l2_name,
+		custom_leave_approver_l3=custom_leave_approver_l3,
+		custom_leave_approver_l3_name=custom_leave_approver_l3_name,
 		department_approvers=department_approvers,
 		is_mandatory=frappe.db.get_single_value(
 			"HR Settings", "leave_approver_mandatory_in_leave_application"
 		),
 	)
-
 
 def get_department_approvers(department: str, parentfield: str) -> list[str]:
 	if not department:
@@ -616,16 +622,45 @@ def get_expense_claim_types() -> list[dict]:
 
 	return (frappe.qb.from_(ClaimType).select(ClaimType.name, ClaimType.description)).run(as_dict=True)
 
+#
+# @frappe.whitelist()
+# def get_expense_approval_details(employee: str) -> dict:
+# 	frappe.has_permission("Employee", "read", employee, throw=True)
+# 	expense_approver, department = frappe.get_cached_value(
+# 		"Employee",
+# 		employee,
+# 		["expense_approver", "department"],
+# 	)
+#
+# 	if not expense_approver and department:
+# 		frappe.has_permission("Department", "read", department, throw=True)
+# 		expense_approver = frappe.db.get_value(
+# 			"Department Approver",
+# 			{"parent": department, "parentfield": "expense_approvers", "idx": 1},
+# 			"approver",
+# 		)
+#
+# 	expense_approver_name = frappe.db.get_value("User", expense_approver, "full_name", cache=True)
+# 	department_approvers = get_department_approvers(department, "expense_approvers")
+#
+# 	if expense_approver and expense_approver not in [approver.name for approver in department_approvers]:
+# 		department_approvers.append({"name": expense_approver, "full_name": expense_approver_name})
+#
+# 	return dict(
+# 		expense_approver=expense_approver,
+# 		expense_approver_name=expense_approver_name,
+# 		department_approvers=department_approvers,
+# 		is_mandatory=frappe.db.get_single_value("HR Settings", "expense_approver_mandatory_in_expense_claim"),
+# 	)
 
 @frappe.whitelist()
 def get_expense_approval_details(employee: str) -> dict:
 	frappe.has_permission("Employee", "read", employee, throw=True)
-	expense_approver, department = frappe.get_cached_value(
+	expense_approver, department, custom_expense_approver_l2, custom_expense_approver_l3 = frappe.get_cached_value(
 		"Employee",
 		employee,
-		["expense_approver", "department"],
+		["expense_approver", "department", "custom_expense_approver_l2", "custom_expense_approver_l3"],
 	)
-
 	if not expense_approver and department:
 		frappe.has_permission("Department", "read", department, throw=True)
 		expense_approver = frappe.db.get_value(
@@ -633,20 +668,24 @@ def get_expense_approval_details(employee: str) -> dict:
 			{"parent": department, "parentfield": "expense_approvers", "idx": 1},
 			"approver",
 		)
-
 	expense_approver_name = frappe.db.get_value("User", expense_approver, "full_name", cache=True)
+	custom_expense_approver_l2_name = frappe.db.get_value(
+		"User", custom_expense_approver_l2, "full_name", cache=True
+	)
+	custom_expense_approver_l3_name = frappe.db.get_value(
+		"User", custom_expense_approver_l3, "full_name", cache=True
+	)
 	department_approvers = get_department_approvers(department, "expense_approvers")
-
 	if expense_approver and expense_approver not in [approver.name for approver in department_approvers]:
 		department_approvers.append({"name": expense_approver, "full_name": expense_approver_name})
-
 	return dict(
 		expense_approver=expense_approver,
 		expense_approver_name=expense_approver_name,
+		custom_expense_approver_l2=custom_expense_approver_l2,
+		custom_expense_approver_l3=custom_expense_approver_l3,
 		department_approvers=department_approvers,
 		is_mandatory=frappe.db.get_single_value("HR Settings", "expense_approver_mandatory_in_expense_claim"),
 	)
-
 
 # Employee Advance
 @frappe.whitelist()
