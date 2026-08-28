@@ -318,6 +318,9 @@ function applyFilters(field) {
 	return field
 }
 
+// ---------------------------------------------------------
+// Expense Approvers (L1, L2, L3)
+// ---------------------------------------------------------
 function setExpenseApprover(data) {
 	const expense_approver = formFields.data?.find(
 		(field) => field.fieldname === "expense_approver"
@@ -332,8 +335,21 @@ function setExpenseApprover(data) {
 		})
 	)
 
+	// Expense Approver L1
 	expenseClaim.value.expense_approver = data?.expense_approver
 	expenseClaim.value.expense_approver_name = data?.expense_approver_name
+
+	// Expense Approver L2
+	expenseClaim.value.custom_expense_approver_l2 =
+		data?.custom_expense_approver_l2 || ""
+	expenseClaim.value.custom_expense_approver_l2_name =
+		data?.custom_expense_approver_l2_name || ""
+
+	// Expense Approver L3
+	expenseClaim.value.custom_expense_approver_l3 =
+		data?.custom_expense_approver_l3 || ""
+	expenseClaim.value.custom_expense_approver_l3_name =
+		data?.custom_expense_approver_l3_name || ""
 }
 
 function addExpenseItem(item) {

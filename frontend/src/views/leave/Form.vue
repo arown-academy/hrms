@@ -107,7 +107,7 @@ watch(
 		}
 		currEmployee.value = employee_id
 		leaveTypes.fetch({ employee: currEmployee.value, date: today })
-		leaveApprovalDetails.fetch({ employee: currEmployee.value })		
+		leaveApprovalDetails.fetch({ employee: currEmployee.value })
 	}
 )
 watch(
@@ -266,6 +266,9 @@ function setHalfDayDateRange() {
 	half_day_date.maxDate = leaveApplication.value.to_date
 }
 
+// ---------------------------------------------------------
+// Leave Approvers (L1, L2, L3)
+// ---------------------------------------------------------
 function setLeaveApprovers(data) {
 	const leave_approver = formFields.data?.find(
 		(field) => field.fieldname === "leave_approver"
@@ -277,11 +280,28 @@ function setLeaveApprovers(data) {
 			: approver.name,
 		value: approver.name,
 	}))
-	if (!leaveApplication.value.leave_approver){
+
+	// Leave Approver L1
+	if (!leaveApplication.value.leave_approver) {
 		leaveApplication.value.leave_approver = data?.leave_approver
 		leaveApplication.value.leave_approver_name = data?.leave_approver_name
 	}
-	
+
+	// Leave Approver L2
+	if (!leaveApplication.value.custom_leave_approver_l2) {
+		leaveApplication.value.custom_leave_approver_l2 =
+			data?.custom_leave_approver_l2 || ""
+		leaveApplication.value.custom_leave_approver_l2_name =
+			data?.custom_leave_approver_l2_name || ""
+	}
+
+	// Leave Approver L3
+	if (!leaveApplication.value.custom_leave_approver_l3) {
+		leaveApplication.value.custom_leave_approver_l3 =
+			data?.custom_leave_approver_l3 || ""
+		leaveApplication.value.custom_leave_approver_l3_name =
+			data?.custom_leave_approver_l3_name || ""
+	}
 }
 
 function setLeaveTypes(data) {

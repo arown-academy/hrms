@@ -4,13 +4,13 @@
  "docstatus": 0,
  "doctype": "Workspace Sidebar",
  "for_user": "",
- "header_icon": "hr",
+ "header_icon": "briefcase-business",
  "idx": 0,
  "items": [
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "home",
+   "icon": "house",
    "indent": 0,
    "keep_closed": 0,
    "label": "Home",
@@ -46,7 +46,7 @@
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "organization",
+   "icon": "building-2",
    "indent": 0,
    "keep_closed": 0,
    "label": "Organizational Chart",
@@ -141,14 +141,13 @@
    "label": "Settings",
    "link_to": "HR Settings",
    "link_type": "DocType",
-   "navigate_to_tab": "employee_tab",
    "route_options": "",
    "show_arrow": 0,
    "type": "Link",
    "url": "/desk/hr-settings#employee_tab"
   }
  ],
- "modified": "2026-03-23 15:16:39.465712",
+ "modified": "2026-08-26 16:17:55.637883",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "HR Setup",

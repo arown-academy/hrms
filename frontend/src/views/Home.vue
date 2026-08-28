@@ -57,5 +57,15 @@ const quickLinks = [
 		title: __("View Salary Slips"),
 		route: "SalarySlipsDashboard",
 	},
+	{
+		icon: markRaw(AttendanceIcon),
+		title: __("My Tasks"),
+		route: "EmployeeTasksDashboard",
+	},
+	{
+		icon: markRaw(SalaryIcon),
+		title: __("Feedback"),
+		route: "EmployeeFeedbackDashboard",
+	},
 ]
 </script>
