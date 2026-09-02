@@ -153,6 +153,18 @@ const routes = [
 				name: "EmployeeFeedbackDashboard",
 				component: () => import("@/views/employee_feedback/Dashboard.vue"),
 			},
+			{
+			path: "/dashboard/employee-complaint",
+			name: "EmployeeComplaintDashboard",
+			component: () =>
+				import("@/views/employee_complaint/Dashboard.vue"),
+		},
+		{
+			path: "/dashboard/stationery-request",
+			name: "StationeryRequestDashboard",
+			component: () =>
+				import("@/views/stationery/StationeryRequest.vue"),
+		},
 		],
 	},
 	{
