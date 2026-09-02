@@ -4,42 +4,35 @@
 			<div class="flex flex-col gap-4 p-4">
 				<!-- Header -->
 				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<!-- Back Arrow -->
+					<div class="flex items-center gap-3">
+						<!-- Back Button -->
 						<button
 							type="button"
 							class="flex h-9 w-9 items-center justify-center rounded-full"
-							@click="goBack"
-							aria-label="Go back"
+							@click="goHome"
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<path d="M19 12H5" />
-								<path d="M12 19l-7-7 7-7" />
-							</svg>
+							<span class="text-3xl leading-none">
+								‹
+							</span>
 						</button>
 
 						<h1 class="text-xl font-semibold">
-							{{ __("Feedback") }}
+							{{
+								showForm
+									? __("New Complaint")
+									: __("Complaints")
+							}}
 						</h1>
 					</div>
 
+					<!-- Add Complaint -->
 					<button
 						v-if="!showForm"
 						type="button"
 						class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
 						@click="openForm"
 					>
-						{{ __("Add Feedback") }}
+						{{ __("Add Complaint") }}
 					</button>
 				</div>
 
@@ -53,7 +46,10 @@
 					</p>
 				</div>
 
-				<!-- Feedback Form -->
+				<!-- ========================= -->
+				<!-- COMPLAINT FORM -->
+				<!-- ========================= -->
+
 				<div
 					v-if="showForm"
 					class="rounded-lg bg-white p-4 shadow-sm"
@@ -62,7 +58,7 @@
 						<!-- Form Header -->
 						<div class="flex items-center justify-between">
 							<h2 class="text-base font-semibold">
-								{{ __("Give Feedback") }}
+								{{ __("Give Complaint") }}
 							</h2>
 
 							<button
@@ -81,14 +77,19 @@
 							</label>
 
 							<input
-								v-model="form.employee"
+								v-model="form.employee_name"
 								type="text"
 								readonly
 								class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-600"
+								:placeholder="
+									loadingEmployee
+										? __('Loading...')
+										: __('Employee')
+								"
 							/>
 						</div>
 
-						<!-- Reports To -->
+						<!-- Reports To / L1 -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
 								{{ __("Reports To") }}
@@ -98,67 +99,55 @@
 								v-model="form.reports_to"
 								type="text"
 								readonly
+								class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-600"
 								:placeholder="
 									loadingEmployee
 										? __('Loading...')
 										: __('Not configured')
 								"
-								class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-600"
 							/>
 						</div>
 
-						<!-- Feedback Approver -->
+						<!-- Complaint Approver / L2 -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
-								{{ __("Feedback Approver") }}
+								{{ __("Complaint Approver") }}
 							</label>
 
 							<input
-								v-model="form.feedback_approver"
+								v-model="form.complaint_approver"
 								type="text"
 								readonly
+								class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-600"
 								:placeholder="
 									loadingEmployee
 										? __('Loading...')
 										: __('Not configured')
 								"
-								class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-600"
 							/>
 						</div>
 
-						<!-- Feedback Type -->
+						<!-- Complaint Type -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
-								{{ __("Feedback Type") }}
+								{{ __("Complaint Type") }}
 								<span class="text-red-500">*</span>
 							</label>
 
 							<select
-								v-model="form.feedback_type"
-								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+								v-model="form.complaint_type"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm"
 							>
 								<option value="">
-									{{ __("Select Feedback Type") }}
+									{{ __("Select Complaint Type") }}
 								</option>
 
-								<option value="General">
-									{{ __("General") }}
+								<option value="Workplace">
+									{{ __("Workplace") }}
 								</option>
 
-								<option value="Suggestion">
-									{{ __("Suggestion") }}
-								</option>
-
-								<option value="Work Environment">
-									{{ __("Work Environment") }}
-								</option>
-
-								<option value="Management">
-									{{ __("Management") }}
-								</option>
-
-								<option value="Salary">
-									{{ __("Salary") }}
+								<option value="Salary / Payroll">
+									{{ __("Salary / Payroll") }}
 								</option>
 
 								<option value="Leave">
@@ -167,6 +156,18 @@
 
 								<option value="Attendance">
 									{{ __("Attendance") }}
+								</option>
+
+								<option value="Manager / Supervisor">
+									{{ __("Manager / Supervisor") }}
+								</option>
+
+								<option value="Colleague">
+									{{ __("Colleague") }}
+								</option>
+
+								<option value="Facilities">
+									{{ __("Facilities") }}
 								</option>
 
 								<option value="Other">
@@ -185,26 +186,59 @@
 							<input
 								v-model="form.subject"
 								type="text"
-								class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+								class="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm"
 								:placeholder="__('Enter subject')"
 							/>
 						</div>
 
-						<!-- Feedback -->
+						<!-- Description -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
-								{{ __("Feedback") }}
+								{{ __("Description") }}
 								<span class="text-red-500">*</span>
 							</label>
 
 							<textarea
-								v-model="form.feedback"
+								v-model="form.description"
 								rows="5"
-								class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+								class="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm"
 								:placeholder="
-									__('Write your feedback here...')
+									__('Describe your complaint...')
 								"
 							></textarea>
+						</div>
+
+						<!-- Supporting Document -->
+						<div class="flex flex-col gap-1">
+							<label class="text-sm font-medium">
+								{{ __("Supporting Document") }}
+							</label>
+
+							<input
+								type="file"
+								@change="handleFileChange"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm"
+							/>
+
+							<p
+								v-if="selectedFile"
+								class="text-xs text-gray-500"
+							>
+								{{ selectedFile.name }}
+							</p>
+						</div>
+
+						<!-- Date -->
+						<div class="flex flex-col gap-1">
+							<label class="text-sm font-medium">
+								{{ __("Date") }}
+							</label>
+
+							<input
+								v-model="form.date"
+								type="date"
+								class="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm"
+							/>
 						</div>
 
 						<!-- Remarks -->
@@ -216,7 +250,7 @@
 							<textarea
 								v-model="form.remarks"
 								rows="3"
-								class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+								class="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm"
 								:placeholder="
 									__('Enter remarks if required')
 								"
@@ -230,50 +264,67 @@
 							:disabled="
 								submitting ||
 								loadingEmployee ||
-								!form.employee
+								!form.employee ||
+								!form.reports_to ||
+								!form.complaint_approver
 							"
-							@click="submitFeedback"
+							@click="submitComplaint"
 						>
 							{{
 								submitting
 									? __("Submitting...")
-									: __("Submit Feedback")
+									: __("Submit Complaint")
 							}}
 						</button>
 					</div>
 				</div>
 
-				<!-- Loading -->
+				<!-- ========================= -->
+				<!-- LOADING -->
+				<!-- ========================= -->
+
 				<div
-					v-if="loading"
+					v-if="loading && !showForm"
 					class="rounded-lg bg-white p-6 text-center shadow-sm"
 				>
 					<p class="text-gray-500">
-						{{ __("Loading feedback...") }}
+						{{ __("Loading complaints...") }}
 					</p>
 				</div>
 
-				<!-- No Feedback -->
+				<!-- ========================= -->
+				<!-- NO COMPLAINT -->
+				<!-- ========================= -->
+
 				<div
-					v-else-if="feedbackList.length === 0 && !showForm"
+					v-else-if="
+						!showForm &&
+						feedbackList.length === 0
+					"
 					class="rounded-lg bg-white p-6 text-center shadow-sm"
 				>
 					<p class="text-gray-500">
 						{{
 							__(
-								"You have not submitted any feedback yet."
+								"You have not submitted any complaints yet."
 							)
 						}}
 					</p>
 				</div>
 
-				<!-- Feedback List -->
+				<!-- ========================= -->
+				<!-- COMPLAINT LIST -->
+				<!-- ========================= -->
+
 				<div
-					v-else-if="feedbackList.length > 0"
+					v-else-if="
+						!showForm &&
+						feedbackList.length > 0
+					"
 					class="flex flex-col gap-3"
 				>
 					<h2 class="text-base font-semibold">
-						{{ __("My Feedback") }}
+						{{ __("My Complaints") }}
 					</h2>
 
 					<div
@@ -282,7 +333,7 @@
 						class="rounded-lg bg-white p-4 shadow-sm"
 					>
 						<div class="flex flex-col gap-3">
-							<!-- Subject and Status -->
+							<!-- Subject + Status -->
 							<div
 								class="flex items-start justify-between gap-3"
 							>
@@ -292,18 +343,24 @@
 									</h3>
 
 									<p
-										v-if="item.feedback_type"
+										v-if="item.complaint_type"
 										class="mt-1 text-xs text-gray-500"
 									>
-										{{ item.feedback_type }}
+										{{ item.complaint_type }}
 									</p>
 								</div>
 
 								<span
-									v-if="item.status"
+									v-if="
+										item.workflow_state ||
+										item.status
+									"
 									class="rounded-full bg-gray-100 px-3 py-1 text-xs"
 								>
-									{{ item.status }}
+									{{
+										item.workflow_state ||
+										item.status
+									}}
 								</span>
 							</div>
 
@@ -319,7 +376,7 @@
 							<div
 								v-if="
 									item.reports_to ||
-									item.feedback_approver
+									item.complaint_approver
 								"
 								class="flex flex-col gap-1"
 							>
@@ -332,28 +389,38 @@
 								</p>
 
 								<p
-									v-if="item.feedback_approver"
+									v-if="
+										item.complaint_approver
+									"
 									class="text-xs text-gray-500"
 								>
-									{{ __("Feedback Approver") }}:
-									{{ item.feedback_approver }}
+									{{ __("Complaint Approver") }}:
+									{{ item.complaint_approver }}
 								</p>
 							</div>
 
-							<!-- Feedback Text -->
-							<div v-if="item.feedback">
+							<!-- Description -->
+							<div v-if="item.description">
 								<p
 									class="whitespace-pre-line text-sm text-gray-600"
 								>
-									{{ stripHtml(item.feedback) }}
+									{{ stripHtml(item.description) }}
 								</p>
 							</div>
 
-							<!-- Submitted Date -->
-							<div v-if="item.submitted_on">
+							<!-- Date -->
+							<div v-if="item.date">
 								<p class="text-xs text-gray-400">
-									{{ __("Submitted On") }}:
-									{{ formatDateTime(item.submitted_on) }}
+									{{ __("Date") }}:
+									{{ formatDate(item.date) }}
+								</p>
+							</div>
+
+							<!-- Resolved On -->
+							<div v-if="item.resolved_on">
+								<p class="text-xs text-gray-400">
+									{{ __("Resolved On") }}:
+									{{ formatDate(item.resolved_on) }}
 								</p>
 							</div>
 
@@ -368,6 +435,23 @@
 								>
 									{{ item.remarks }}
 								</p>
+							</div>
+
+							<!-- Supporting Document -->
+							<div
+								v-if="item.supporting_document"
+								class="pt-1"
+							>
+								<a
+									:href="
+										item.supporting_document
+									"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-sm text-blue-600"
+								>
+									{{ __("View Supporting Document") }}
+								</a>
 							</div>
 						</div>
 					</div>
@@ -384,15 +468,7 @@ import { useRouter } from "vue-router"
 import BaseLayout from "@/components/BaseLayout.vue"
 
 const __ = inject("$translate")
-
 const router = useRouter()
-
-/*
- * Go back to Home
- */
-const goBack = () => {
-	router.push("/home")
-}
 
 const feedbackList = ref([])
 
@@ -402,41 +478,57 @@ const submitting = ref(false)
 const showForm = ref(false)
 const errorMessage = ref("")
 
+const selectedFile = ref(null)
+
 const form = ref({
 	employee: "",
+	employee_name: "",
 	reports_to: "",
-	feedback_approver: "",
-	feedback_type: "",
+	complaint_approver: "",
+	complaint_type: "",
 	subject: "",
-	feedback: "",
+	description: "",
+	supporting_document: "",
+	status: "",
+	date: "",
+	resolved_on: "",
 	remarks: "",
 })
 
 /*
- * Format Date/Time
+ * Format Date
  */
-const formatDateTime = (value) => {
+const formatDate = (value) => {
 	if (!value) return ""
 
-	return new Date(
-		value.replace(" ", "T")
-	).toLocaleString()
+	const date = new Date(
+		value.includes(" ")
+			? value.replace(" ", "T")
+			: value
+	)
+
+	return date.toLocaleDateString()
 }
 
 /*
- * Remove HTML from feedback
+ * Remove HTML from Text Editor fields
  */
 const stripHtml = (value) => {
 	if (!value) return ""
 
 	const temp = document.createElement("div")
+
 	temp.innerHTML = value
 
-	return temp.textContent || temp.innerText || ""
+	return (
+		temp.textContent ||
+		temp.innerText ||
+		""
+	)
 }
 
 /*
- * Get currently logged-in Frappe user
+ * Get logged-in user
  */
 const getLoggedInUser = async () => {
 	const response = await fetch(
@@ -445,7 +537,9 @@ const getLoggedInUser = async () => {
 
 	if (!response.ok) {
 		throw new Error(
-			__("Unable to identify the logged-in user.")
+			__(
+				"Unable to identify the logged-in user."
+			)
 		)
 	}
 
@@ -453,7 +547,9 @@ const getLoggedInUser = async () => {
 
 	if (!result.message) {
 		throw new Error(
-			__("Unable to identify the logged-in user.")
+			__(
+				"Unable to identify the logged-in user."
+			)
 		)
 	}
 
@@ -461,13 +557,13 @@ const getLoggedInUser = async () => {
 }
 
 /*
- * Get Employee and feedback approvers
+ * Get current Employee
  *
- * Employee.custom_feedback_approver
- *      -> Reports To / L1
+ * Employee.custom_complaint_approver
+ *      -> L1
  *
- * Employee.custom_feedback_approver_l2
- *      -> Feedback Approver / L2
+ * Employee.custom_complaint_approver_l2
+ *      -> L2
  */
 const getEmployeeDetails = async () => {
 	const user = await getLoggedInUser()
@@ -476,8 +572,8 @@ const getEmployeeDetails = async () => {
 		"name",
 		"user_id",
 		"employee_name",
-		"custom_feedback_approver",
-		"custom_feedback_approver_l2",
+		"custom_complaint_approver",
+		"custom_complaint_approver_l2",
 	])
 
 	const filters = JSON.stringify([
@@ -526,8 +622,7 @@ const getEmployeeDetails = async () => {
 }
 
 /*
- * Load employee details when opening
- * the feedback form.
+ * Load Employee + Approvers
  */
 const loadEmployeeDetails = async () => {
 	loadingEmployee.value = true
@@ -537,35 +632,32 @@ const loadEmployeeDetails = async () => {
 		const employee =
 			await getEmployeeDetails()
 
-		form.value.employee =
+		form.value.employee = employee.name
+
+		form.value.employee_name =
+			employee.employee_name ||
 			employee.name
 
 		form.value.reports_to =
-			employee.custom_feedback_approver ||
+			employee.custom_complaint_approver ||
 			""
 
-		form.value.feedback_approver =
-			employee.custom_feedback_approver_l2 ||
+		form.value.complaint_approver =
+			employee.custom_complaint_approver_l2 ||
 			""
 
-		/*
-		 * L1 approver is required.
-		 */
 		if (!form.value.reports_to) {
 			throw new Error(
 				__(
-					"Feedback L1 approver is not configured for your Employee record."
+					"Complaint L1 approver is not configured for your Employee record."
 				)
 			)
 		}
 
-		/*
-		 * L2 approver is required.
-		 */
-		if (!form.value.feedback_approver) {
+		if (!form.value.complaint_approver) {
 			throw new Error(
 				__(
-					"Feedback L2 approver is not configured for your Employee record."
+					"Complaint L2 approver is not configured for your Employee record."
 				)
 			)
 		}
@@ -586,63 +678,53 @@ const loadEmployeeDetails = async () => {
 }
 
 /*
- * Get Employee name
+ * Load employee complaints
  */
-const getEmployee = async () => {
-	const employee =
-		await getEmployeeDetails()
-
-	return employee.name
-}
-
-/*
- * Load feedback created by current employee
- */
-const loadFeedback = async () => {
+const loadComplaints = async () => {
 	loading.value = true
 	errorMessage.value = ""
 
 	try {
 		const employee =
-			await getEmployee()
+			await getEmployeeDetails()
 
 		const fields = JSON.stringify([
 			"name",
 			"employee",
-			"feedback_type",
+			"complaint_type",
 			"subject",
-			"feedback",
-			"submitted_on",
+			"description",
+			"supporting_document",
 			"status",
-			"remarks",
+			"workflow_state",
+			"date",
 			"reports_to",
-			"feedback_approver",
+			"complaint_approver",
+			"resolved_on",
+			"remarks",
 		])
 
 		const filters = JSON.stringify([
-			["employee", "=", employee],
+			["employee", "=", employee.name],
 		])
 
 		const url =
-			"/api/resource/Employee Feedback" +
+			"/api/resource/Employee Complaint" +
 			"?fields=" +
 			encodeURIComponent(fields) +
 			"&filters=" +
 			encodeURIComponent(filters) +
 			"&order_by=" +
-			encodeURIComponent(
-				"submitted_on desc"
-			) +
+			encodeURIComponent("date desc") +
 			"&limit_page_length=100"
 
 		const response = await fetch(url)
 
-		const result =
-			await response.json()
+		const result = await response.json()
 
 		if (!response.ok) {
 			console.error(
-				"Feedback API Error:",
+				"Complaint API Error:",
 				result
 			)
 
@@ -650,7 +732,7 @@ const loadFeedback = async () => {
 				result?.exception ||
 					result?.message ||
 					__(
-						"Unable to load feedback."
+						"Unable to load complaints."
 					)
 			)
 		}
@@ -659,14 +741,14 @@ const loadFeedback = async () => {
 			result.data || []
 	} catch (error) {
 		console.error(
-			"Error loading feedback:",
+			"Error loading complaints:",
 			error
 		)
 
 		errorMessage.value =
 			error.message ||
 			__(
-				"Unable to load feedback."
+				"Unable to load complaints."
 			)
 	} finally {
 		loading.value = false
@@ -674,18 +756,25 @@ const loadFeedback = async () => {
 }
 
 /*
- * Open feedback form
+ * Open Complaint Form
  */
 const openForm = async () => {
 	errorMessage.value = ""
 
+	selectedFile.value = null
+
 	form.value = {
 		employee: "",
+		employee_name: "",
 		reports_to: "",
-		feedback_approver: "",
-		feedback_type: "",
+		complaint_approver: "",
+		complaint_type: "",
 		subject: "",
-		feedback: "",
+		description: "",
+		supporting_document: "",
+		status: "",
+		date: getToday(),
+		resolved_on: "",
 		remarks: "",
 	}
 
@@ -695,130 +784,110 @@ const openForm = async () => {
 }
 
 /*
- * Submit Feedback
+ * File selected
  */
-const submitFeedback = async () => {
+const handleFileChange = (event) => {
+	const files = event.target.files
+
+	if (!files || files.length === 0) {
+		selectedFile.value = null
+		return
+	}
+
+	selectedFile.value = files[0]
+}
+
+/*
+ * Submit Complaint
+ */
+const submitComplaint = async () => {
 	errorMessage.value = ""
 
-	/*
-	 * Validate Employee
-	 */
 	if (!form.value.employee) {
 		errorMessage.value = __(
 			"Unable to identify your Employee record."
 		)
-
 		return
 	}
 
-	/*
-	 * Validate L1 approver
-	 */
 	if (!form.value.reports_to) {
 		errorMessage.value = __(
-			"Feedback L1 approver is not configured."
+			"Complaint L1 approver is not configured."
 		)
-
 		return
 	}
 
-	/*
-	 * Validate L2 approver
-	 */
-	if (!form.value.feedback_approver) {
+	if (!form.value.complaint_approver) {
 		errorMessage.value = __(
-			"Feedback L2 approver is not configured."
+			"Complaint L2 approver is not configured."
 		)
-
 		return
 	}
 
-	/*
-	 * Validate Feedback Type
-	 */
-	if (!form.value.feedback_type) {
+	if (!form.value.complaint_type) {
 		errorMessage.value = __(
-			"Please select a feedback type."
+			"Please select a complaint type."
 		)
-
 		return
 	}
 
-	/*
-	 * Validate Subject
-	 */
 	if (!form.value.subject.trim()) {
 		errorMessage.value = __(
 			"Please enter a subject."
 		)
-
 		return
 	}
 
-	/*
-	 * Validate Feedback
-	 */
-	if (!form.value.feedback.trim()) {
+	if (!form.value.description.trim()) {
 		errorMessage.value = __(
-			"Please enter your feedback."
+			"Please enter the complaint description."
 		)
-
 		return
 	}
 
 	submitting.value = true
 
 	try {
-		/*
-		 * Create Employee Feedback.
-		 *
-		 * IMPORTANT:
-		 * We create the document as Open.
-		 *
-		 * The Frappe Workflow/action should
-		 * then handle Submit and move it to
-		 * Pending L1 Approval.
-		 */
 		const doc = {
-			doctype:
-				"Employee Feedback",
+			doctype: "Employee Complaint",
 
 			employee:
 				form.value.employee,
 
-			feedback_type:
-				form.value.feedback_type,
+			complaint_type:
+				form.value.complaint_type,
 
 			subject:
 				form.value.subject.trim(),
 
-			feedback:
-				form.value.feedback.trim(),
+			description:
+				form.value.description.trim(),
 
-			remarks:
-				form.value.remarks
-					? form.value.remarks.trim()
-					: "",
-
-			submitted_on:
-				getCurrentDateTime(),
+			date:
+				form.value.date ||
+				getToday(),
 
 			status: "Open",
 
 			reports_to:
 				form.value.reports_to,
 
-			feedback_approver:
-				form.value.feedback_approver,
+			complaint_approver:
+				form.value.complaint_approver,
+
+			remarks:
+				form.value.remarks
+					? form.value.remarks.trim()
+					: "",
 		}
 
 		console.log(
-			"Creating Employee Feedback:",
+			"Creating Employee Complaint:",
 			doc
 		)
 
 		const response = await fetch(
-			"/api/resource/Employee Feedback",
+			"/api/resource/Employee Complaint",
 			{
 				method: "POST",
 
@@ -827,8 +896,7 @@ const submitFeedback = async () => {
 						"application/json",
 
 					"X-Frappe-CSRF-Token":
-						window.frappe
-							?.csrf_token ||
+						window.frappe?.csrf_token ||
 						window.csrf_token ||
 						"fetch",
 				},
@@ -842,7 +910,7 @@ const submitFeedback = async () => {
 
 		if (!response.ok) {
 			console.error(
-				"Create Feedback Error:",
+				"Create Complaint Error:",
 				result
 			)
 
@@ -850,14 +918,40 @@ const submitFeedback = async () => {
 				result?.exception ||
 					result?.message ||
 					__(
-						"Unable to submit feedback."
+						"Unable to create complaint."
 					)
 			)
 		}
 
-		console.log(
-			"Feedback created:",
+		const complaint =
 			result.data
+
+		console.log(
+			"Complaint created:",
+			complaint
+		)
+
+		/*
+		 * Upload supporting document
+		 */
+		if (selectedFile.value) {
+			await uploadSupportingDocument(
+				complaint.name,
+				selectedFile.value
+			)
+		}
+
+		/*
+		 * Submit workflow
+		 *
+		 * Open
+		 *   ↓
+		 * Submit
+		 *   ↓
+		 * Pending L1 Approval
+		 */
+		await submitWorkflow(
+			complaint.name
 		)
 
 		/*
@@ -865,30 +959,34 @@ const submitFeedback = async () => {
 		 */
 		form.value = {
 			employee: "",
+			employee_name: "",
 			reports_to: "",
-			feedback_approver: "",
-			feedback_type: "",
+			complaint_approver: "",
+			complaint_type: "",
 			subject: "",
-			feedback: "",
+			description: "",
+			supporting_document: "",
+			status: "",
+			date: "",
+			resolved_on: "",
 			remarks: "",
 		}
 
+		selectedFile.value = null
+
 		showForm.value = false
 
-		/*
-		 * Reload feedback list
-		 */
-		await loadFeedback()
+		await loadComplaints()
 	} catch (error) {
 		console.error(
-			"Error submitting feedback:",
+			"Error submitting complaint:",
 			error
 		)
 
 		errorMessage.value =
 			error.message ||
 			__(
-				"Unable to submit feedback."
+				"Unable to submit complaint."
 			)
 	} finally {
 		submitting.value = false
@@ -896,9 +994,137 @@ const submitFeedback = async () => {
 }
 
 /*
- * Current date/time
+ * Apply Workflow Submit action
  */
-const getCurrentDateTime = () => {
+const submitWorkflow = async (
+	complaintName
+) => {
+	const workflowResponse =
+		await fetch(
+			"/api/method/frappe.model.workflow.apply_workflow",
+			{
+				method: "POST",
+
+				headers: {
+					"Content-Type":
+						"application/json",
+
+					"X-Frappe-CSRF-Token":
+						window.frappe?.csrf_token ||
+						window.csrf_token ||
+						"fetch",
+				},
+
+				body: JSON.stringify({
+					doc: {
+						doctype:
+							"Employee Complaint",
+
+						name:
+							complaintName,
+					},
+
+					action: "Submit",
+				}),
+			}
+		)
+
+	const workflowResult =
+		await workflowResponse.json()
+
+	if (!workflowResponse.ok) {
+		console.error(
+			"Workflow Submit Error:",
+			workflowResult
+		)
+
+		throw new Error(
+			workflowResult?.exception ||
+				workflowResult?.message ||
+				__(
+					"Complaint was created, but could not be submitted for approval."
+				)
+		)
+	}
+
+	console.log(
+		"Complaint workflow submitted:",
+		workflowResult
+	)
+
+	return workflowResult
+}
+
+/*
+ * Upload supporting document
+ */
+const uploadSupportingDocument = async (
+	docname,
+	file
+) => {
+	const formData = new FormData()
+
+	formData.append(
+		"file",
+		file
+	)
+
+	formData.append(
+		"doctype",
+		"Employee Complaint"
+	)
+
+	formData.append(
+		"docname",
+		docname
+	)
+
+	formData.append(
+		"is_private",
+		"1"
+	)
+
+	const response = await fetch(
+		"/api/method/upload_file",
+		{
+			method: "POST",
+
+			headers: {
+				"X-Frappe-CSRF-Token":
+					window.frappe?.csrf_token ||
+					window.csrf_token ||
+					"fetch",
+			},
+
+			body: formData,
+		}
+	)
+
+	const result =
+		await response.json()
+
+	if (!response.ok) {
+		console.error(
+			"File Upload Error:",
+			result
+		)
+
+		throw new Error(
+			result?.exception ||
+				result?.message ||
+				__(
+					"Unable to upload supporting document."
+				)
+		)
+	}
+
+	return result
+}
+
+/*
+ * Today's date
+ */
+const getToday = () => {
 	const now = new Date()
 
 	const pad = (number) =>
@@ -907,42 +1133,50 @@ const getCurrentDateTime = () => {
 	return (
 		`${now.getFullYear()}-${pad(
 			now.getMonth() + 1
-		)}-${pad(
-			now.getDate()
-		)}` +
-		` ${pad(
-			now.getHours()
-		)}:${pad(
-			now.getMinutes()
-		)}:${pad(
-			now.getSeconds()
-		)}`
+		)}-${pad(now.getDate())}`
 	)
 }
 
 /*
- * Close feedback form
+ * Close Form
+ *
+ * This is used by the Cancel button.
+ * It does NOT navigate to Home.
  */
 const closeForm = () => {
 	showForm.value = false
 
 	errorMessage.value = ""
 
+	selectedFile.value = null
+
 	form.value = {
 		employee: "",
+		employee_name: "",
 		reports_to: "",
-		feedback_approver: "",
-		feedback_type: "",
+		complaint_approver: "",
+		complaint_type: "",
 		subject: "",
-		feedback: "",
+		description: "",
+		supporting_document: "",
+		status: "",
+		date: "",
+		resolved_on: "",
 		remarks: "",
 	}
 }
 
 /*
- * Initial loading
+ * Back Arrow → Home
+ */
+const goHome = () => {
+	router.push("/home")
+}
+
+/*
+ * Load complaints on page open
  */
 onMounted(() => {
-	loadFeedback()
+	loadComplaints()
 })
 </script>
