@@ -11,17 +11,11 @@
 							class="flex h-9 w-9 items-center justify-center rounded-full"
 							@click="goHome"
 						>
-							<span class="text-3xl leading-none">
-								‹
-							</span>
+							<span class="text-3xl leading-none">‹</span>
 						</button>
 
 						<h1 class="text-xl font-semibold">
-							{{
-								showForm
-									? __("New Complaint")
-									: __("Complaints")
-							}}
+							{{ showForm ? __("New Complaint") : __("Complaints") }}
 						</h1>
 					</div>
 
@@ -92,7 +86,8 @@
 						<!-- Reports To / L1 -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
-								{{ __("Reports To") }}
+								{{ __("Reports To")
+								}}
 							</label>
 
 							<input
@@ -108,10 +103,13 @@
 							/>
 						</div>
 
-						<!-- Complaint Approver / L2 -->
+						<!-- Complaint Approver / L2 (optional) -->
 						<div class="flex flex-col gap-1">
 							<label class="text-sm font-medium">
 								{{ __("Complaint Approver") }}
+								<span class="text-xs font-normal text-gray-400">
+									{{ __("(optional)") }}
+								</span>
 							</label>
 
 							<input
@@ -202,9 +200,7 @@
 								v-model="form.description"
 								rows="5"
 								class="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm"
-								:placeholder="
-									__('Describe your complaint...')
-								"
+								:placeholder="__('Describe your complaint...')"
 							></textarea>
 						</div>
 
@@ -251,9 +247,7 @@
 								v-model="form.remarks"
 								rows="3"
 								class="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm"
-								:placeholder="
-									__('Enter remarks if required')
-								"
+								:placeholder="__('Enter remarks if required')"
 							></textarea>
 						</div>
 
@@ -265,8 +259,7 @@
 								submitting ||
 								loadingEmployee ||
 								!form.employee ||
-								!form.reports_to ||
-								!form.complaint_approver
+								!form.reports_to
 							"
 							@click="submitComplaint"
 						>
@@ -279,10 +272,7 @@
 					</div>
 				</div>
 
-				<!-- ========================= -->
 				<!-- LOADING -->
-				<!-- ========================= -->
-
 				<div
 					v-if="loading && !showForm"
 					class="rounded-lg bg-white p-6 text-center shadow-sm"
@@ -292,10 +282,7 @@
 					</p>
 				</div>
 
-				<!-- ========================= -->
 				<!-- NO COMPLAINT -->
-				<!-- ========================= -->
-
 				<div
 					v-else-if="
 						!showForm &&
@@ -304,18 +291,11 @@
 					class="rounded-lg bg-white p-6 text-center shadow-sm"
 				>
 					<p class="text-gray-500">
-						{{
-							__(
-								"You have not submitted any complaints yet."
-							)
-						}}
+						{{ __("You have not submitted any complaints yet.") }}
 					</p>
 				</div>
 
-				<!-- ========================= -->
 				<!-- COMPLAINT LIST -->
-				<!-- ========================= -->
-
 				<div
 					v-else-if="
 						!showForm &&
@@ -389,9 +369,7 @@
 								</p>
 
 								<p
-									v-if="
-										item.complaint_approver
-									"
+									v-if="item.complaint_approver"
 									class="text-xs text-gray-500"
 								>
 									{{ __("Complaint Approver") }}:
@@ -443,9 +421,7 @@
 								class="pt-1"
 							>
 								<a
-									:href="
-										item.supporting_document
-									"
+									:href="item.supporting_document"
 									target="_blank"
 									rel="noopener noreferrer"
 									class="text-sm text-blue-600"
@@ -495,9 +471,17 @@ const form = ref({
 	remarks: "",
 })
 
-/*
- * Format Date
- */
+const getToday = () => {
+	const now = new Date()
+
+	const pad = (number) =>
+		String(number).padStart(2, "0")
+
+	return `${now.getFullYear()}-${pad(
+		now.getMonth() + 1
+	)}-${pad(now.getDate())}`
+}
+
 const formatDate = (value) => {
 	if (!value) return ""
 
@@ -510,9 +494,6 @@ const formatDate = (value) => {
 	return date.toLocaleDateString()
 }
 
-/*
- * Remove HTML from Text Editor fields
- */
 const stripHtml = (value) => {
 	if (!value) return ""
 
@@ -527,9 +508,6 @@ const stripHtml = (value) => {
 	)
 }
 
-/*
- * Get logged-in user
- */
 const getLoggedInUser = async () => {
 	const response = await fetch(
 		"/api/method/frappe.auth.get_logged_user"
@@ -556,15 +534,6 @@ const getLoggedInUser = async () => {
 	return result.message
 }
 
-/*
- * Get current Employee
- *
- * Employee.custom_complaint_approver
- *      -> L1
- *
- * Employee.custom_complaint_approver_l2
- *      -> L2
- */
 const getEmployeeDetails = async () => {
 	const user = await getLoggedInUser()
 
@@ -593,11 +562,6 @@ const getEmployeeDetails = async () => {
 	const result = await response.json()
 
 	if (!response.ok) {
-		console.error(
-			"Employee API Error:",
-			result
-		)
-
 		throw new Error(
 			result?.exception ||
 				result?.message ||
@@ -621,9 +585,6 @@ const getEmployeeDetails = async () => {
 	return result.data[0]
 }
 
-/*
- * Load Employee + Approvers
- */
 const loadEmployeeDetails = async () => {
 	loadingEmployee.value = true
 	errorMessage.value = ""
@@ -654,13 +615,9 @@ const loadEmployeeDetails = async () => {
 			)
 		}
 
-		if (!form.value.complaint_approver) {
-			throw new Error(
-				__(
-					"Complaint L2 approver is not configured for your Employee record."
-				)
-			)
-		}
+		// L2 (complaint_approver) is optional — some
+		// employees only have an L1 approver configured.
+		// No error thrown when it is blank.
 	} catch (error) {
 		console.error(
 			"Error loading employee details:",
@@ -677,9 +634,6 @@ const loadEmployeeDetails = async () => {
 	}
 }
 
-/*
- * Load employee complaints
- */
 const loadComplaints = async () => {
 	loading.value = true
 	errorMessage.value = ""
@@ -723,11 +677,6 @@ const loadComplaints = async () => {
 		const result = await response.json()
 
 		if (!response.ok) {
-			console.error(
-				"Complaint API Error:",
-				result
-			)
-
 			throw new Error(
 				result?.exception ||
 					result?.message ||
@@ -755,9 +704,6 @@ const loadComplaints = async () => {
 	}
 }
 
-/*
- * Open Complaint Form
- */
 const openForm = async () => {
 	errorMessage.value = ""
 
@@ -783,9 +729,6 @@ const openForm = async () => {
 	await loadEmployeeDetails()
 }
 
-/*
- * File selected
- */
 const handleFileChange = (event) => {
 	const files = event.target.files
 
@@ -798,7 +741,12 @@ const handleFileChange = (event) => {
 }
 
 /*
- * Submit Complaint
+ * Create Complaint
+ * Then apply the workflow action:
+ *
+ * Open
+ *   ↓ Submit
+ * Pending L1 Approval
  */
 const submitComplaint = async () => {
 	errorMessage.value = ""
@@ -817,12 +765,7 @@ const submitComplaint = async () => {
 		return
 	}
 
-	if (!form.value.complaint_approver) {
-		errorMessage.value = __(
-			"Complaint L2 approver is not configured."
-		)
-		return
-	}
+	// L2 (complaint_approver) is optional — no check here.
 
 	if (!form.value.complaint_type) {
 		errorMessage.value = __(
@@ -848,6 +791,20 @@ const submitComplaint = async () => {
 	submitting.value = true
 
 	try {
+		/*
+		 * Step 1:
+		 * Create the document in the workflow's
+		 * initial state.
+		 *
+		 * IMPORTANT: "status" is a Select field that
+		 * only allows "", "Open", "In Review",
+		 * "Resolved", "Closed". Do NOT set it to
+		 * "Submitted" here — that value is not a valid
+		 * option and will raise a ValidationError at
+		 * insert time. The workflow itself takes care
+		 * of moving status forward once the "Submit"
+		 * action is applied below.
+		 */
 		const doc = {
 			doctype: "Employee Complaint",
 
@@ -869,11 +826,14 @@ const submitComplaint = async () => {
 
 			status: "Open",
 
+			workflow_state: "Open",
+
 			reports_to:
 				form.value.reports_to,
 
 			complaint_approver:
-				form.value.complaint_approver,
+				form.value.complaint_approver ||
+				"",
 
 			remarks:
 				form.value.remarks
@@ -923,6 +883,11 @@ const submitComplaint = async () => {
 			)
 		}
 
+		/*
+		 * IMPORTANT:
+		 * Use the complete document returned
+		 * by Frappe.
+		 */
 		const complaint =
 			result.data
 
@@ -932,7 +897,8 @@ const submitComplaint = async () => {
 		)
 
 		/*
-		 * Upload supporting document
+		 * Step 2:
+		 * Upload supporting document.
 		 */
 		if (selectedFile.value) {
 			await uploadSupportingDocument(
@@ -942,16 +908,54 @@ const submitComplaint = async () => {
 		}
 
 		/*
-		 * Submit workflow
-		 *
-		 * Open
-		 *   ↓
-		 * Submit
-		 *   ↓
-		 * Pending L1 Approval
+		 * Step 3:
+		 * Apply workflow action using the
+		 * complete complaint document.
 		 */
-		await submitWorkflow(
-			complaint.name
+		const workflowResponse =
+			await fetch(
+				"/api/method/frappe.model.workflow.apply_workflow",
+				{
+					method: "POST",
+
+					headers: {
+						"Content-Type":
+							"application/json",
+
+						"X-Frappe-CSRF-Token":
+							window.frappe?.csrf_token ||
+							window.csrf_token ||
+							"fetch",
+					},
+
+					body: JSON.stringify({
+						doc: complaint,
+						action: "Submit",
+					}),
+				}
+			)
+
+		const workflowResult =
+			await workflowResponse.json()
+
+		if (!workflowResponse.ok) {
+			console.error(
+				"Workflow Submit Error:",
+				workflowResult
+			)
+
+			throw new Error(
+				workflowResult?.exception ||
+					workflowResult?.message ||
+					__(
+						"Complaint was created, but could not be submitted for approval."
+					)
+			)
+		}
+
+		console.log(
+			"Complaint submitted to workflow:",
+			workflowResult
 		)
 
 		/*
@@ -993,71 +997,6 @@ const submitComplaint = async () => {
 	}
 }
 
-/*
- * Apply Workflow Submit action
- */
-const submitWorkflow = async (
-	complaintName
-) => {
-	const workflowResponse =
-		await fetch(
-			"/api/method/frappe.model.workflow.apply_workflow",
-			{
-				method: "POST",
-
-				headers: {
-					"Content-Type":
-						"application/json",
-
-					"X-Frappe-CSRF-Token":
-						window.frappe?.csrf_token ||
-						window.csrf_token ||
-						"fetch",
-				},
-
-				body: JSON.stringify({
-					doc: {
-						doctype:
-							"Employee Complaint",
-
-						name:
-							complaintName,
-					},
-
-					action: "Submit",
-				}),
-			}
-		)
-
-	const workflowResult =
-		await workflowResponse.json()
-
-	if (!workflowResponse.ok) {
-		console.error(
-			"Workflow Submit Error:",
-			workflowResult
-		)
-
-		throw new Error(
-			workflowResult?.exception ||
-				workflowResult?.message ||
-				__(
-					"Complaint was created, but could not be submitted for approval."
-				)
-		)
-	}
-
-	console.log(
-		"Complaint workflow submitted:",
-		workflowResult
-	)
-
-	return workflowResult
-}
-
-/*
- * Upload supporting document
- */
 const uploadSupportingDocument = async (
 	docname,
 	file
@@ -1121,28 +1060,6 @@ const uploadSupportingDocument = async (
 	return result
 }
 
-/*
- * Today's date
- */
-const getToday = () => {
-	const now = new Date()
-
-	const pad = (number) =>
-		String(number).padStart(2, "0")
-
-	return (
-		`${now.getFullYear()}-${pad(
-			now.getMonth() + 1
-		)}-${pad(now.getDate())}`
-	)
-}
-
-/*
- * Close Form
- *
- * This is used by the Cancel button.
- * It does NOT navigate to Home.
- */
 const closeForm = () => {
 	showForm.value = false
 
@@ -1166,16 +1083,10 @@ const closeForm = () => {
 	}
 }
 
-/*
- * Back Arrow → Home
- */
 const goHome = () => {
 	router.push("/home")
 }
 
-/*
- * Load complaints on page open
- */
 onMounted(() => {
 	loadComplaints()
 })
