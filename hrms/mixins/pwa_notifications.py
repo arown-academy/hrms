@@ -18,7 +18,8 @@ class PWANotificationsMixin:
 
 	APPROVER_FIELDS = {
 		"Leave Application": ["leave_approver"],
-		"Expense Claim": ["expense_approver"],
+		# Expense Claim approvers are notified per workflow level by arown.expense_claim_flow
+		"Expense Claim": [],
 		"Shift Request": ["approver"],
 		"Attendance Request": ["custom_attendance_request_approver"],
 		"Employee Advance": ["custom_advance_approver", "custom_accountant"],
