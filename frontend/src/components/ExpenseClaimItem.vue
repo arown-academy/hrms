@@ -61,6 +61,17 @@ const statusMap = {
 	"Approved & Unpaid": "orange",
 	"Approved & Submitted": "blue",
 	Rejected: "red",
+	// Expense Claim Workflow states
+	Approved: "green",
+	"Request Pending Department Head": "orange",
+	"Request Pending Accounts": "orange",
+	"Request Pending HR Head": "orange",
+	"Pending HR Booking": "blue",
+	"Request Approved": "blue",
+	"Request Rejected": "red",
+	"Pending Department Head Approval": "orange",
+	"Pending HR Approval": "orange",
+	"Pending Accounts Approval": "orange",
 }
 
 const status = computed(() => {

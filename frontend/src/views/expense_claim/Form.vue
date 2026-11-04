@@ -92,6 +92,17 @@ const expenseClaim = ref({
 
 const companyCurrency = computed(() => getCompanyCurrency(expenseClaim.value.company))
 
+// shown only for the Travel category (the mobile form does not evaluate depends_on)
+const travelFields = [
+	"custom_travel_details_section",
+	"custom_purpose_of_travel",
+	"custom_from_place",
+	"custom_to_place",
+	"custom_travel_start_date",
+	"custom_travel_end_date",
+	"custom_mode_of_travel",
+]
+
 // get form fields
 const formFields = createResource({
 	url: "hrms.api.get_doctype_fields",
@@ -105,7 +116,8 @@ const formFields = createResource({
 		})
 	},
 	onSuccess(_data) {
-		expenseApproverDetails.reload()
+		setFieldVisibility()
+		if (!props.id) expenseApprovers.reload()
 		if (!expenseClaim.value.currency) {
 			employeeCurrency.reload()
 		}
@@ -170,11 +182,25 @@ function onFormReloaded() {
 	advances.reload()
 }
 
-const expenseApproverDetails = createResource({
-	url: "hrms.api.get_expense_approval_details",
-	params: { employee: currEmployee.value },
+// Department Head, HR Head and Accounts approvers come from the Employee
+const expenseApprovers = createResource({
+	url: "frappe.client.get_value",
+	makeParams() {
+		return {
+			doctype: "Employee",
+			fieldname: [
+				"custom_expense_dept_head_approver",
+				"custom_expense_hr_approver",
+				"custom_expense_accounts_approver",
+			],
+			filters: { name: currEmployee.value },
+		}
+	},
 	onSuccess(data) {
-		setExpenseApprover(data)
+		expenseClaim.value.expense_approver = data?.custom_expense_dept_head_approver || ""
+		expenseClaim.value.custom_expense_hr_approver = data?.custom_expense_hr_approver || ""
+		expenseClaim.value.custom_expense_accounts_approver =
+			data?.custom_expense_accounts_approver || ""
 	},
 })
 
@@ -220,9 +246,14 @@ watch(
 			setFormReadOnly()
 		}
 		currEmployee.value = employee_id
-		expenseApproverDetails.fetch({ employee: currEmployee.value })
+		if (!props.id) expenseApprovers.fetch()
 		employeeCurrency.fetch()
 	},
+)
+
+watch(
+	() => [expenseClaim.value.custom_expense_category, expenseClaim.value.custom_pre_approval_required],
+	() => setFieldVisibility()
 )
 
 watch(
@@ -318,38 +349,14 @@ function applyFilters(field) {
 	return field
 }
 
-// ---------------------------------------------------------
-// Expense Approvers (L1, L2, L3)
-// ---------------------------------------------------------
-function setExpenseApprover(data) {
-	const expense_approver = formFields.data?.find(
-		(field) => field.fieldname === "expense_approver"
-	)
-	expense_approver.reqd = data?.is_mandatory
-	expense_approver.documentList = data?.department_approvers.map(
-		(approver) => ({
-			label: approver.full_name
-				? `${approver.name} : ${approver.full_name}`
-				: approver.name,
-			value: approver.name,
-		})
-	)
-
-	// Expense Approver L1
-	expenseClaim.value.expense_approver = data?.expense_approver
-	expenseClaim.value.expense_approver_name = data?.expense_approver_name
-
-	// Expense Approver L2
-	expenseClaim.value.custom_expense_approver_l2 =
-		data?.custom_expense_approver_l2 || ""
-	expenseClaim.value.custom_expense_approver_l2_name =
-		data?.custom_expense_approver_l2_name || ""
-
-	// Expense Approver L3
-	expenseClaim.value.custom_expense_approver_l3 =
-		data?.custom_expense_approver_l3 || ""
-	expenseClaim.value.custom_expense_approver_l3_name =
-		data?.custom_expense_approver_l3_name || ""
+function setFieldVisibility() {
+	formFields.data?.forEach((field) => {
+		if (travelFields.includes(field.fieldname)) {
+			field.hidden = expenseClaim.value.custom_expense_category !== "Travel"
+		} else if (field.fieldname === "custom_hr_booking_required") {
+			field.hidden = !expenseClaim.value.custom_pre_approval_required
+		}
+	})
 }
 
 function addExpenseItem(item) {
