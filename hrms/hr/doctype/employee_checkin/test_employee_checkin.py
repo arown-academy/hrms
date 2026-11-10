@@ -19,6 +19,7 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from hrms.hr.doctype.attendance.attendance import mark_attendance
 from hrms.hr.doctype.employee_checkin.employee_checkin import (
 	CheckinRadiusExceededError,
+	CheckinSequenceError,
 	add_log_based_on_employee_field,
 	bulk_fetch_shift,
 	calculate_working_hours,
@@ -867,6 +868,41 @@ class TestEmployeeCheckin(HRMSTestSuite):
 		self.assertEqual(attendance[0].working_hours, 7)
 		self.assertEqual(attendance[0].in_time, in_log.time)
 		self.assertEqual(attendance[0].out_time, out_log.time)
+
+	def test_mobile_app_log_sequence(self):
+		from hrms.api import create_employee_checkin
+
+		user = "test_mobile_app_log_sequence@example.com"
+		employee = make_employee(user, company="_Test Company")
+
+		# forgotten check-out yesterday: counts as not checked in
+		make_checkin(employee, time=add_days(now_datetime(), -1), log_type="IN")
+
+		frappe.set_user(user)
+		try:
+			self.assertRaises(CheckinSequenceError, create_employee_checkin, "OUT")
+
+			log = create_employee_checkin("IN")
+			self.assertEqual(log["log_type"], "IN")
+			self.assertLess(abs((now_datetime() - log["time"]).total_seconds()), 60)
+			# retry right after a lost response: the saved log comes back, nothing new is inserted
+			retry = create_employee_checkin("IN")
+			self.assertEqual((retry["name"], retry["already_saved"]), (log["name"], 1))
+
+			out = create_employee_checkin("OUT")
+			self.assertEqual(out["log_type"], "OUT")
+			self.assertEqual(create_employee_checkin("OUT")["name"], out["name"])
+
+			# an older OUT is not a retry: OUT again is rejected
+			frappe.db.set_value("Employee Checkin", log["name"], "time", now_datetime() - timedelta(minutes=30))
+			frappe.db.set_value("Employee Checkin", out["name"], "time", now_datetime() - timedelta(minutes=20))
+			self.assertRaises(CheckinSequenceError, create_employee_checkin, "OUT")
+		finally:
+			frappe.set_user("Administrator")
+
+		# desk / device logs are not checked
+		make_checkin(employee, time=add_days(now_datetime(), -2), log_type="IN")
+		make_checkin(employee, time=add_days(now_datetime(), -2) + timedelta(hours=1), log_type="IN")
 
 
 def make_n_checkins(employee, n, hours_to_reverse=1):

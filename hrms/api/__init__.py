@@ -59,6 +59,55 @@ def get_current_employee_info() -> dict:
 	return employee
 
 
+ALREADY_SAVED_MINUTES = 10
+
+
+@frappe.whitelist(methods=["POST"])
+def create_employee_checkin(
+	log_type: str, latitude: float | None = None, longitude: float | None = None
+) -> dict:
+	"""Check-in / check-out from the mobile app (PWA).
+
+	The employee comes from the session and the time is the server's time. The app-only order
+	rule (no IN after IN, no OUT after OUT) runs in EmployeeCheckin.validate_log_sequence.
+
+	Retry after a lost response: if the latest log already has this log type and is at most
+	ALREADY_SAVED_MINUTES old, that log is returned with already_saved = 1 instead of an error.
+	"""
+	from hrms.hr.doctype.employee_checkin.employee_checkin import get_last_log_for_update
+
+	if log_type not in ("IN", "OUT"):
+		frappe.throw(_("Invalid log type: {0}").format(log_type))
+
+	employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+	if not employee:
+		frappe.throw(_("No active employee is linked to your user."), frappe.PermissionError)
+
+	last = get_last_log_for_update(employee)
+	if (
+		last
+		and last.log_type == log_type
+		and frappe.utils.time_diff_in_seconds(frappe.utils.now_datetime(), last.time)
+		<= ALREADY_SAVED_MINUTES * 60
+	):
+		return {"name": last.name, "log_type": last.log_type, "time": last.time, "already_saved": 1}
+
+	doc = frappe.new_doc("Employee Checkin")
+	doc.update(
+		{
+			"employee": employee,
+			"log_type": log_type,
+			"time": frappe.utils.now_datetime(),
+			"latitude": latitude,
+			"longitude": longitude,
+		}
+	)
+	doc.flags.from_mobile_app = True
+	doc.insert()
+
+	return {"name": doc.name, "log_type": doc.log_type, "time": doc.time}
+
+
 @frappe.whitelist()
 def get_all_employees() -> list[dict]:
 	return frappe.get_list(
