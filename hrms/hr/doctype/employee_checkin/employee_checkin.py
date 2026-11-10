@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, get_datetime
+from frappe.utils import cint, format_datetime, get_datetime, getdate
 
 from hrms.hr.doctype.shift_assignment.shift_assignment import get_actual_start_end_datetime_of_shift
 from hrms.hr.utils import (
@@ -21,17 +21,59 @@ class CheckinRadiusExceededError(frappe.ValidationError):
 	pass
 
 
+class CheckinSequenceError(frappe.ValidationError):
+	pass
+
+
 class EmployeeCheckin(Document):
 	def before_validate(self):
 		self.time = get_datetime(self.time).replace(microsecond=0)
 
 	def validate(self):
 		validate_active_employee(self.employee)
+		self.validate_log_sequence()
 		self.validate_duplicate_log()
 		self.validate_time_change()
 		self.fetch_shift()
 		self.set_geolocation()
 		self.validate_distance_from_shift_location()
+
+	def validate_log_sequence(self):
+		"""Mobile app only (flag set by hrms.api.create_employee_checkin): IN and OUT must take turns.
+
+		Checked in = the last log is an IN of the same day. An IN from an earlier day (forgotten
+		check-out) counts as not checked in, so the employee can check in again; HR fixes the
+		missing OUT. Desk, device and import logs are not checked.
+		"""
+		if not (self.flags.from_mobile_app and self.is_new() and self.log_type):
+			return
+
+		# lock the employee row: a double tap or a second device waits here instead of inserting twice
+		frappe.db.get_value("Employee", self.employee, "name", for_update=True)
+
+		last = frappe.db.get_value(
+			"Employee Checkin",
+			{"employee": self.employee, "log_type": ("is", "set")},
+			["log_type", "time"],
+			order_by="time desc, creation desc",
+			as_dict=True,
+		)
+		checked_in = bool(
+			last and last.log_type == "IN" and getdate(last.time) == getdate(get_datetime(self.time))
+		)
+
+		if self.log_type == "IN" and checked_in:
+			frappe.throw(
+				_("You are already checked in since {0}.").format(format_datetime(last.time)),
+				exc=CheckinSequenceError,
+				title=_("Already Checked In"),
+			)
+		if self.log_type == "OUT" and not checked_in:
+			frappe.throw(
+				_("You are not checked in. Please check in first."),
+				exc=CheckinSequenceError,
+				title=_("Not Checked In"),
+			)
 
 	def validate_duplicate_log(self):
 		doc = frappe.db.exists(

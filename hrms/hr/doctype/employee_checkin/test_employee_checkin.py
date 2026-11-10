@@ -19,6 +19,7 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from hrms.hr.doctype.attendance.attendance import mark_attendance
 from hrms.hr.doctype.employee_checkin.employee_checkin import (
 	CheckinRadiusExceededError,
+	CheckinSequenceError,
 	add_log_based_on_employee_field,
 	bulk_fetch_shift,
 	calculate_working_hours,
@@ -867,6 +868,33 @@ class TestEmployeeCheckin(HRMSTestSuite):
 		self.assertEqual(attendance[0].working_hours, 7)
 		self.assertEqual(attendance[0].in_time, in_log.time)
 		self.assertEqual(attendance[0].out_time, out_log.time)
+
+	def test_mobile_app_log_sequence(self):
+		from hrms.api import create_employee_checkin
+
+		user = "test_mobile_app_log_sequence@example.com"
+		employee = make_employee(user, company="_Test Company")
+
+		# forgotten check-out yesterday: counts as not checked in
+		make_checkin(employee, time=add_days(now_datetime(), -1), log_type="IN")
+
+		frappe.set_user(user)
+		try:
+			self.assertRaises(CheckinSequenceError, create_employee_checkin, "OUT")
+
+			log = create_employee_checkin("IN")
+			self.assertEqual(log["log_type"], "IN")
+			self.assertLess(abs((now_datetime() - log["time"]).total_seconds()), 60)
+			self.assertRaises(CheckinSequenceError, create_employee_checkin, "IN")
+
+			self.assertEqual(create_employee_checkin("OUT")["log_type"], "OUT")
+			self.assertRaises(CheckinSequenceError, create_employee_checkin, "OUT")
+		finally:
+			frappe.set_user("Administrator")
+
+		# desk / device logs are not checked
+		make_checkin(employee, time=add_days(now_datetime(), -2), log_type="IN")
+		make_checkin(employee, time=add_days(now_datetime(), -2) + timedelta(hours=1), log_type="IN")
 
 
 def make_n_checkins(employee, n, hours_to_reverse=1):
