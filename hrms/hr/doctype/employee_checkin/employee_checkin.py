@@ -48,16 +48,7 @@ class EmployeeCheckin(Document):
 		if not (self.flags.from_mobile_app and self.is_new() and self.log_type):
 			return
 
-		# lock the employee row: a double tap or a second device waits here instead of inserting twice
-		frappe.db.get_value("Employee", self.employee, "name", for_update=True)
-
-		last = frappe.db.get_value(
-			"Employee Checkin",
-			{"employee": self.employee, "log_type": ("is", "set")},
-			["log_type", "time"],
-			order_by="time desc, creation desc",
-			as_dict=True,
-		)
+		last = get_last_log_for_update(self.employee)
 		checked_in = bool(
 			last and last.log_type == "IN" and getdate(last.time) == getdate(get_datetime(self.time))
 		)
@@ -170,6 +161,21 @@ class EmployeeCheckin(Document):
 				_("You must be within {0} meters of your shift location to check in.").format(checkin_radius),
 				exc=CheckinRadiusExceededError,
 			)
+
+
+def get_last_log_for_update(employee: str) -> dict | None:
+	"""The employee's latest log with a log type, after locking the Employee row.
+
+	The lock makes a double tap or a second device wait here instead of inserting twice.
+	"""
+	frappe.db.get_value("Employee", employee, "name", for_update=True)
+	return frappe.db.get_value(
+		"Employee Checkin",
+		{"employee": employee, "log_type": ("is", "set")},
+		["name", "log_type", "time"],
+		order_by="time desc, creation desc",
+		as_dict=True,
+	)
 
 
 @frappe.whitelist()

@@ -885,9 +885,17 @@ class TestEmployeeCheckin(HRMSTestSuite):
 			log = create_employee_checkin("IN")
 			self.assertEqual(log["log_type"], "IN")
 			self.assertLess(abs((now_datetime() - log["time"]).total_seconds()), 60)
-			self.assertRaises(CheckinSequenceError, create_employee_checkin, "IN")
+			# retry right after a lost response: the saved log comes back, nothing new is inserted
+			retry = create_employee_checkin("IN")
+			self.assertEqual((retry["name"], retry["already_saved"]), (log["name"], 1))
 
-			self.assertEqual(create_employee_checkin("OUT")["log_type"], "OUT")
+			out = create_employee_checkin("OUT")
+			self.assertEqual(out["log_type"], "OUT")
+			self.assertEqual(create_employee_checkin("OUT")["name"], out["name"])
+
+			# an older OUT is not a retry: OUT again is rejected
+			frappe.db.set_value("Employee Checkin", log["name"], "time", now_datetime() - timedelta(minutes=30))
+			frappe.db.set_value("Employee Checkin", out["name"], "time", now_datetime() - timedelta(minutes=20))
 			self.assertRaises(CheckinSequenceError, create_employee_checkin, "OUT")
 		finally:
 			frappe.set_user("Administrator")

@@ -67,7 +67,12 @@
 				<FeatherIcon name="check-circle" class="h-16 w-16 text-green-600" />
 				<div class="flex flex-col gap-1.5 items-center text-center">
 					<div class="font-bold text-xl text-gray-900">
-						{{ __("{0} saved", [pendingAction.title]) }}
+						<!-- already_saved: a retry after a lost response found the log saved the first time -->
+						{{
+							savedLog?.already_saved
+								? __("{0} was already saved", [pendingAction.title])
+								: __("{0} saved", [pendingAction.title])
+						}}
 					</div>
 					<div class="font-medium text-gray-600 text-base">
 						{{ __("Recorded at {0}", [dayjs(savedLog?.time).format("hh:mm a, D MMM YYYY")]) }}
