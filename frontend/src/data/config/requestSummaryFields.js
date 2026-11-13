@@ -113,6 +113,26 @@ export const EXPENSE_CLAIM_FIELDS = [
 	},
 ]
 
+// Expense Request (arown) = step 1 of an expense
+export const EXPENSE_REQUEST_FIELDS = [
+	{ fieldname: "name", label: "ID", fieldtype: "Data" },
+	{ fieldname: "employee_name", label: "Employee", fieldtype: "Data" },
+	{ fieldname: "request_date", label: "Request Date", fieldtype: "Date" },
+	{ fieldname: "expense_category", label: "Expense Category", fieldtype: "Data" },
+	{ fieldname: "estimated_amount", label: "Estimated Amount", fieldtype: "Currency" },
+	{ fieldname: "expected_expense_date", label: "Expected Expense Date", fieldtype: "Date" },
+	{ fieldname: "purpose", label: "Purpose", fieldtype: "Small Text" },
+	{ fieldname: "description", label: "More Details", fieldtype: "Small Text" },
+	{ fieldname: "from_place", label: "From Place", fieldtype: "Data" },
+	{ fieldname: "to_place", label: "To Place", fieldtype: "Data" },
+	{ fieldname: "travel_start_date", label: "Travel Start Date", fieldtype: "Date" },
+	{ fieldname: "travel_end_date", label: "Travel End Date", fieldtype: "Date" },
+	{ fieldname: "mode_of_travel", label: "Mode of Travel", fieldtype: "Data" },
+	{ fieldname: "booking_required", label: "Booking by HR Required", fieldtype: "Check" },
+	{ fieldname: "booking_details", label: "What to Book", fieldtype: "Small Text" },
+	{ fieldname: "workflow_state", label: "Status", fieldtype: "Data" },
+]
+
 export const ATTENDANCE_REQUEST_FIELDS = [
 	{
 		fieldname: "name",

@@ -75,10 +75,15 @@ export default function useWorkflow(doctype) {
 					iconClasses: "text-green-500",
 				})
 			},
-			onError() {
+			onError(error) {
+				// the server's own message (validation), HTML stripped; else the generic text
+				const serverMessage = (error?.messages || [])
+					.join(" ")
+					.replace(/<[^>]+>/g, "")
+					.trim()
 				toast({
 					title: "Error",
-					text: `Error applying workflow action: ${action}`,
+					text: serverMessage || `Error applying workflow action: ${action}`,
 					icon: "alert-circle",
 					position: "bottom-center",
 					iconClasses: "text-red-500",

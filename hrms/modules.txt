@@ -1,2 +1,10 @@
 HR
 Payroll
+HR Setup
+Tenure
+Recruitment
+Shift and Attendance
+Leaves
+Expenses
+Performance
+Tax and Benefits

@@ -51,6 +51,7 @@
 import { IonPage, IonContent } from "@ionic/vue"
 import { createResource } from "frappe-ui"
 import { computed, ref, watch, inject } from "vue"
+import { useRoute } from "vue-router"
 
 import FormView from "@/components/FormView.vue"
 import ExpensesTable from "@/components/ExpensesTable.vue"
@@ -61,6 +62,8 @@ import { useCurrencyConversion } from "@/composables/useCurrencyConversion"
 
 
 const dayjs = inject("$dayjs")
+const route = useRoute()
+const REQUEST_API = "arown.arown.doctype.expense_request.expense_request"
 
 const today = dayjs().format("YYYY-MM-DD")
 const isReadOnly = ref(false)
@@ -112,11 +115,19 @@ const formFields = createResource({
 
 		return fields.map((field) => {
 			if (field.fieldname === "posting_date") field.default = today
+			// step 2 of an expense: every claim is made from an approved Expense Request
+			if (field.fieldname === "custom_expense_request") field.reqd = 1
 			return applyFilters(field)
 		})
 	},
 	onSuccess(_data) {
 		setFieldVisibility()
+		if (!props.id) {
+			approvedRequests.reload()
+			if (route.query.expense_request) {
+				expenseClaim.value.custom_expense_request = route.query.expense_request
+			}
+		}
 		if (!props.id) expenseApprovers.reload()
 		if (!expenseClaim.value.currency) {
 			employeeCurrency.reload()
@@ -204,6 +215,48 @@ const expenseApprovers = createResource({
 	},
 })
 
+// the employee's approved requests without a claim yet (the Expense Request picker)
+const approvedRequests = createResource({
+	url: `${REQUEST_API}.get_approved_requests`,
+	makeParams() {
+		return { employee: currEmployee.value }
+	},
+	onSuccess(data) {
+		const field = formFields.data?.find((f) => f.fieldname === "custom_expense_request")
+		if (!field) return
+		const options = data.map((row) => ({
+			label: `${row.name} : ${row.expense_category} - ${row.purpose || ""}`.slice(0, 80),
+			value: row.name,
+		}))
+		// opened from a request: keep it in the list
+		const current = expenseClaim.value.custom_expense_request
+		if (current && !options.some((o) => o.value === current)) options.unshift({ label: current, value: current })
+		field.documentList = options
+	},
+})
+
+// the claim's details from the request (same mapping as the desk's Create Expense Claim)
+const requestDetails = createResource({
+	url: `${REQUEST_API}.make_expense_claim`,
+	onSuccess(data) {
+		const copy = [
+			"custom_expense_request",
+			"custom_expense_category",
+			"custom_purpose_of_travel",
+			"custom_from_place",
+			"custom_to_place",
+			"custom_travel_start_date",
+			"custom_travel_end_date",
+			"custom_mode_of_travel",
+			"remark",
+		]
+		copy.forEach((field) => {
+			if (data?.[field] !== undefined && data?.[field] !== null) expenseClaim.value[field] = data[field]
+		})
+		setFieldVisibility()
+	},
+})
+
 const employeeCurrency = createResource({
 	url: "frappe.client.get_value",
 	makeParams() {
@@ -252,8 +305,15 @@ watch(
 )
 
 watch(
-	() => [expenseClaim.value.custom_expense_category, expenseClaim.value.custom_pre_approval_required],
+	() => expenseClaim.value.custom_expense_category,
 	() => setFieldVisibility()
+)
+
+watch(
+	() => expenseClaim.value.custom_expense_request,
+	(request) => {
+		if (!props.id && request) requestDetails.fetch({ source_name: request })
+	}
 )
 
 watch(
@@ -353,8 +413,6 @@ function setFieldVisibility() {
 	formFields.data?.forEach((field) => {
 		if (travelFields.includes(field.fieldname)) {
 			field.hidden = expenseClaim.value.custom_expense_category !== "Travel"
-		} else if (field.fieldname === "custom_hr_booking_required") {
-			field.hidden = !expenseClaim.value.custom_pre_approval_required
 		}
 	})
 }

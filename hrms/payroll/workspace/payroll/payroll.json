@@ -388,6 +388,7 @@
  "roles": [],
  "sequence_id": 9.0,
  "shortcuts": [],
+ "standard": 1,
  "title": "Payroll",
  "type": "Workspace"
 }
