@@ -61,14 +61,8 @@ const statusMap = {
 	"Approved & Unpaid": "orange",
 	"Approved & Submitted": "blue",
 	Rejected: "red",
-	// Expense Claim Workflow states
+	// Expense Claim Workflow states (the request stage is the Expense Request since 13 Nov 2026)
 	Approved: "green",
-	"Request Pending Department Head": "orange",
-	"Request Pending Accounts": "orange",
-	"Request Pending HR Head": "orange",
-	"Pending HR Booking": "blue",
-	"Request Approved": "blue",
-	"Request Rejected": "red",
 	"Pending Department Head Approval": "orange",
 	"Pending HR Approval": "orange",
 	"Pending Accounts Approval": "orange",

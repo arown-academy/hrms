@@ -51,10 +51,17 @@ const quickLinks = [
 		route: "LeaveApplicationFormView",
 	},
 
+	// an expense = Expense Request (approved first) -> Expense Claim made from it
+	{
+		icon: markRaw(ExpenseIcon),
+		title: __("Request an Expense"),
+		route: "ExpenseRequestFormView",
+	},
+
 	{
 		icon: markRaw(ExpenseIcon),
 		title: __("Claim an Expense"),
-		route: "ExpenseClaimFormView",
+		route: "ExpenseClaimsDashboard",
 	},
 
 	{

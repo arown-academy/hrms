@@ -19,6 +19,10 @@ add_to_apps_screen = [
 	}
 ]
 
+# Each area (HR Setup, Leaves, Expenses, ...) is its own module so that it gets its own sidebar.
+# "HR" keeps the doctypes but ships no navigation; HR Setup carries it.
+code_only_modules = {"HR": ["HR Setup"]}
+
 # Includes in <head>
 # ------------------
 
