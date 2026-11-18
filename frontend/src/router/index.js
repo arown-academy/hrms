@@ -148,17 +148,26 @@ const routes = [
 				name: "EmployeeTasksDashboard",
 				component: () => import("@/views/employee_task/Dashboard.vue"),
 			},
+			// Complaints / Feedback = Support Tickets of the Arown LMS support desk (views/support)
 			{
 				path: "/dashboard/employee-feedback",
 				name: "EmployeeFeedbackDashboard",
-				component: () => import("@/views/employee_feedback/Dashboard.vue"),
+				component: () => import("@/views/support/Tickets.vue"),
+				props: { kind: "feedback" },
 			},
 			{
-			path: "/dashboard/employee-complaint",
-			name: "EmployeeComplaintDashboard",
-			component: () =>
-				import("@/views/employee_complaint/Dashboard.vue"),
-		},
+				path: "/dashboard/employee-complaint",
+				name: "EmployeeComplaintDashboard",
+				component: () => import("@/views/support/Tickets.vue"),
+				props: { kind: "complaint" },
+			},
+			{
+				// name used by the Notifications page: <DocType without spaces>DetailView
+				path: "/support-ticket/:id",
+				name: "SupportTicketDetailView",
+				component: () => import("@/views/support/TicketDetail.vue"),
+				props: true,
+			},
 		{
 			path: "/dashboard/stationery-request",
 			name: "StationeryRequestDashboard",

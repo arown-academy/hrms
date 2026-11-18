@@ -126,6 +126,9 @@ class JobOpening(WebsiteGenerator):
 		context.no_of_applications = frappe.db.count("Job Applicant", {"job_title": self.name})
 		context.parents = [{"route": "jobs", "title": _("All Jobs")}]
 		context.posted_on = pretty_date(self.posted_on)
+		# Arown careers page styling (templates/generators/job_opening.html)
+		context.body_class = "jobs-page job-detail-page"
+		context.today = frappe.utils.today()
 
 
 def close_expired_job_openings():

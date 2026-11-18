@@ -55,6 +55,14 @@ $(() => {
 		window.location.href = this.id;
 	});
 
+	// Arown: cards are focusable - Enter / Space opens the job like a click
+	$("[name=card]").on("keydown", function (e) {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			window.location.href = this.id;
+		}
+	});
+
 	$("[name=pagination]").on("click", function () {
 		const filters = $(".desktop-filters").serialize();
 		update_params(filters + "&page=" + this.id);

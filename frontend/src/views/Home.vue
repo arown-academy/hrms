@@ -66,7 +66,7 @@ const quickLinks = [
 
 	{
 		icon: markRaw(EmployeeAdvanceIcon),
-		title: __("Request an Advance"),
+		title: __("Request Salary Advance"),
 		route: "EmployeeAdvanceFormView",
 	},
 

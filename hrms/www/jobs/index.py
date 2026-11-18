@@ -20,6 +20,9 @@ def get_context(context):
 	context.no_of_pages = get_no_of_pages(filters, txt, page_len)
 	context.all_filters = get_all_filters(filters)
 	context.sort = sort
+	# Arown: total open positions for the page banner (independent of the active filters)
+	context.total_openings = frappe.db.count("Job Opening", {"status": "Open", "publish": 1})
+	context.today = frappe.utils.today()
 
 
 def get_job_openings(filters=None, txt=None, sort=None, limit=20, offset=0):
