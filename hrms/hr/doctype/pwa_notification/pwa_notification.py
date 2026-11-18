@@ -39,5 +39,7 @@ class PWANotification(Document):
 			return f"{base_url}/leave-applications/{self.reference_document_name}"
 		elif self.reference_document_type == "Expense Claim":
 			return f"{base_url}/expense-claims/{self.reference_document_name}"
+		elif self.reference_document_type == "Support Ticket":  # Arown: complaints / feedback
+			return f"{base_url}/support-ticket/{self.reference_document_name}"
 
 		return base_url

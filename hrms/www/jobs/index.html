@@ -1,9 +1,63 @@
 {% extends "templates/web.html" %}
-{% block title %} {{ _("Job Openings") }} {% endblock title %}
+{#- Arown careers page (17 Nov 2026): branded banner + cards. Element ids / names / classes used by index.js
+    (#data, #search-box, .desktop-filters, .mobile-filters, #sort, #filter, [name=card], [name=clear-filters],
+    #apply-filters, #filters-drawer, #overlay, pagination ids) are kept as in upstream HRMS. -#}
+{% block title %} {{ _("Careers at Arown Academy") }} {% endblock title %}
 
-{% block header %}
-<h3 class="mt-0 mb-10 jobs-page">{{ _("Job Openings") }}</h3>
-{% endblock header %}
+{% block breadcrumbs %}{% endblock breadcrumbs %}
+
+{% block hero %}
+<section class="jobs-hero">
+	<div class="container">
+		{%- if parents %}
+		<nav class="jobs-hero-crumbs" aria-label="breadcrumb">
+			{% for p in parents %}<a href="{{ p.route }}">{{ p.name }}</a><span>/</span>{% endfor %}
+			<span class="current">{{ _("Careers") }}</span>
+		</nav>
+		{% endif %}
+		<div class="jobs-hero-grid">
+			<div class="jobs-hero-text">
+				<img class="jobs-hero-logo" src="/assets/arown/images/arown-academy-logo.png" alt="Arown Academy" />
+				<span class="jobs-eyebrow"><span class="dot"></span>{{ _("We're hiring") }}</span>
+				<h1>{{ _("Build a career that") }} <span class="accent">{{ _("shapes healthcare") }}</span></h1>
+				<p class="lead">
+					{{ _("Arown Academy has prepared healthcare professionals in Kerala since 2016. Join our team across Calicut, Kannur, Thrissur, Kochi and Perinthalmanna.") }}
+				</p>
+
+				<div class="jobs-search">
+					<svg class="icon icon-sm"><use href="#icon-search"></use></svg>
+					<input
+						type="search"
+						name="query"
+						id="search-box"
+						class="desktop-filters mobile-filters"
+						placeholder="{{ _('Search by role or keyword') }}"
+						aria-label="{{ _('Search jobs') }}"
+					/>
+					<button type="button" class="jobs-search-btn" onclick="$('#search-box').trigger('search')">
+						{{ _("Search") }}
+					</button>
+				</div>
+			</div>
+
+			<div class="jobs-hero-stats">
+				<div class="stat">
+					<div class="stat-value">{{ total_openings }}</div>
+					<div class="stat-label">{{ _("Open position") if total_openings == 1 else _("Open positions") }}</div>
+				</div>
+				<div class="stat">
+					<div class="stat-value">5</div>
+					<div class="stat-label">{{ _("Campuses in Kerala") }}</div>
+				</div>
+				<div class="stat">
+					<div class="stat-value">2016</div>
+					<div class="stat-label">{{ _("Educating since") }}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock hero %}
 
 {% block page_content %}
 <meta
@@ -12,291 +66,168 @@
 	data-no-of-pages="{{ no_of_pages }}"
 />
 
-<div class="row">
+<div class="row jobs-body">
 	<!-- Desktop Filters -->
-	<div class="col-3 text-15 d-none d-lg-block">
-		<div class="flex align-items-center">
-			<p class="text-18 font-weight-bold mb-0">{{ _("Filters") }}</p>
-			<a name="clear-filters" class="ml-auto" role="button">{{ _("Clear All") }}</a>
-		</div>
-		<hr class="mb-6" />
+	<aside class="col-lg-3 d-none d-lg-block">
+		<div class="filters-card">
+			<div class="filters-card-head">
+				<span>{{ _("Filters") }}</span>
+				<a name="clear-filters" role="button">{{ _("Clear all") }}</a>
+			</div>
 
-		{% for name, values in all_filters.items() %}
-		<div class="mb-6">
-			<p class="font-weight-bold mb-4">
-				{{ name.title() | replace('_', ' ') }}
-			</p>
-
-			{% for value in values %}
-			<div class="form-group form-check">
-				<input
-					id="{{ 'desktop-' ~ value }}"
-					name="{{ name }}"
-					value="{{ value }}"
-					class="form-check-input desktop-filters"
-					type="checkbox"
-					role="button"
-				/>
-				<label
-					class="form-check-label align-top"
-					for="{{ 'desktop-' ~ value }}"
-					role="button"
-				>
-					{{ value }}
+			{% for name, values in all_filters.items() %}
+			<div class="filter-group">
+				<p class="filter-title">{{ name.title() | replace('_', ' ') }}</p>
+				{% for value in values %}
+				<label class="filter-option" for="{{ 'desktop-' ~ value }}" role="button">
+					<input
+						id="{{ 'desktop-' ~ value }}"
+						name="{{ name }}"
+						value="{{ value }}"
+						class="desktop-filters"
+						type="checkbox"
+					/>
+					<span class="filter-check"></span>
+					<span class="filter-text">{{ value }}</span>
 				</label>
+				{% endfor %}
 			</div>
 			{% endfor %}
 		</div>
-		{% endfor %}
-	</div>
+	</aside>
 
 	<div class="col-lg-9">
-		<div class="row px-4 mb-10 align-items-center">
-			<!-- Search  -->
-			<div class="col-9 col-lg-8 px-0">
-				<div class="input-group search-bar flex text-muted">
-					<div class="search-box-container">
-						<input
-							type="search"
-							name="query"
-							id="search-box"
-							class="form-control border font-md h-100 desktop-filters mobile-filters"
-							placeholder="{{ _('Search for Jobs') }}"
-							aria-label="Jobs Search"
-						/>
-					</div>
-					<span class="search-icon">
-						<svg class="icon icon-sm"><use href="#icon-search"></use></svg>
-					</span>
-				</div>
-			</div>
-
-
-			<div class="col-3 col-lg-4 flex pr-0">
-				<div class="ml-auto flex align-items-center">
-					<div class="btn-group border h-100" style="border-radius: 8px">
-
-						<!-- Sort -->
-						{% set sort = frappe.form_dict.sort %}
-						<button id="sort" class="btn btn-default btn-order bg-white">
-							<span class="sort-order">
-								<svg class="icon icon-sm">
-									<use
-										class
-										href="#icon-sort-{{ 'ascending' if sort == 'asc' else 'descending' }}"
-									></use>
-								</svg>
-							</span>
-						</button>
-						<div
-							class="border-left px-3 flex align-items-center bg-white d-none d-lg-block"
-							style="border-radius: 0px 8px 8px 0px"
-						>
-							<span class="text-14">{{ _("Posting Date") }}</span>
-						</div>
-
-						<!-- Mobile Filter Button -->
-						<button
-							id="filter"
-							class="btn btn-default btn-order bg-white border-left d-lg-none"
-						>
-							<span class="sort-order">
-								<svg class="icon icon-sm">
-									<use
-										class
-										href="#icon-filter"
-									></use>
-								</svg>
-							</span>
-						</button>
-
-					</div>
-				</div>
+		<!-- Toolbar -->
+		<div class="jobs-toolbar">
+			{% set job_opening_count = job_openings|length %}
+			<p class="jobs-count">
+				<b>{{ job_opening_count }}</b>
+				{{ _("open position") if job_opening_count == 1 else _("open positions") }}
+			</p>
+			<div class="jobs-toolbar-actions">
+				{% set sort = frappe.form_dict.sort %}
+				<button id="sort" class="toolbar-btn" title="{{ _('Sort by posting date') }}">
+					<svg class="icon icon-sm">
+						<use href="#icon-sort-{{ 'ascending' if sort == 'asc' else 'descending' }}"></use>
+					</svg>
+					<span>{{ _("Oldest first") if sort == "asc" else _("Newest first") }}</span>
+				</button>
+				<button id="filter" class="toolbar-btn d-lg-none">
+					<svg class="icon icon-sm"><use href="#icon-filter"></use></svg>
+					<span>{{ _("Filters") }}</span>
+				</button>
 			</div>
 		</div>
 
 		<!-- Job Opening Cards -->
-		<p class="text-secondary mb-4 text-15">
-			{% set job_opening_count = job_openings|length %}
-			{{ _("Showing") + " " + frappe.utils.cstr(job_opening_count) + " " }}
-			{{ _("result") if job_opening_count == 1 else _("results")}}
-		</p>
-
+		{% if job_openings %}
 		<div class="row">
 			{% for jo in job_openings %}
-			<div class="mb-8 col-sm-6">
-				<div
-					id="{{ jo.route }}"
-					name="card"
-					class="card border h-100 flex flex-col"
-					role="button"
-				>
-					<div class="p-6">
-						<div class="flex mb-5">
-							<div class="col-12 {{ 'col-lg-9' if jo.employment_type }} px-0">
-								<h4
-									class="mt-0 mb-1 jobs-page text-truncate"
-									title="{{ jo.job_title }}"
-								>
-									{{ jo.job_title }}
-								</h4>
-								<div class="text-14">
-									<span class="font-weight-bold">{{ jo.company }}</span>
-									<span class="text-secondary">
-										{{ " · " }} {{ jo.posted_on }}
-									</span>
-								</div>
-							</div>
-
-							{%- if jo.employment_type -%}
-							<div class="col-3 px-0 flex d-none d-lg-flex">
-								<div class="ml-auto font-weight-bold text-nowrap text-12">
-									{%- if jo.employment_type == "Full-time" -%}
-									<div class="py-1 px-2 full-time-badge">
-										• {{ jo.employment_type }}
-									</div>
-									{%- elif jo.employment_type == "Part-time" -%}
-									<div class="py-1 px-2 part-time-badge">
-										• {{ jo.employment_type }}
-									</div>
-									{%- else -%}
-									<div class="py-1 px-2 other-badge">
-										• {{ jo.employment_type }}
-									</div>
-									{% endif %}
-								</div>
-							</div>
-							{% endif %}
+			{% set days_left = frappe.utils.date_diff(jo.closes_on, today) if jo.closes_on else None %}
+			<div class="col-md-6 mb-4">
+				<article id="{{ jo.route }}" name="card" class="job-card" role="button" tabindex="0">
+					<div class="job-card-head">
+						<div class="job-avatar">{{ (jo.job_title or "?")[:1] | upper }}</div>
+						<div class="job-heading">
+							<h3 class="job-title" title="{{ jo.job_title }}">{{ jo.job_title }}</h3>
+							<div class="job-sub">{{ jo.company }} · {{ _("Posted") }} {{ jo.posted_on }}</div>
 						</div>
-
-						<!-- Job Details -->
-						<div class="text-14">
-							{%- if jo.location -%}
-							<div class="mt-3 flex align-items-center">
-								<svg
-									class="icon ml-0 mr-1"
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 16 16"
-								>
-									<g stroke="var(--gray-700)" stroke-miterlimit="10">
-										<path
-											d="M11.467 3.458c1.958 1.957 1.958 5.088.027 7.02L7.97 14l-3.523-3.523a4.945 4.945 0 010-6.993l.026-.026a4.922 4.922 0 016.993 0zm0 0c-.026-.026-.026-.026 0 0z"
-										></path>
-										<path
-											d="M7.971 8.259a1.305 1.305 0 100-2.61 1.305 1.305 0 000 2.61z"
-										></path>
-									</g>
-								</svg>
-								{{ jo.location }}
-							</div>
-							{% endif %}
-
-							{%- if jo.department -%}
-							<div class="mt-3 flex align-items-center">
-								<svg
-									class="icon ml-0 mr-1"
-									style="--icon-stroke: var(--gray-700)"
-								>
-									<use href="#icon-branch"></use>
-								</svg>
-								{{ jo.department }}
-							</div>
-							{% endif %}
-
-							{%- if jo.publish_salary_range -%}
-							<div class="mt-3 flex align-items-center">
-								<svg
-									class="icon ml-0 mr-1"
-									style="--icon-stroke: var(--gray-700)"
-								>
-									<use href="#icon-income"></use>
-								</svg>
-								&nbsp;
-								{%- if jo.lower_range -%}
-									{{ frappe.format_value(frappe.utils.flt(jo.lower_range), currency=jo.currency) }}
-								{% endif %}
-								{%- if jo.lower_range and jo.upper_range -%}
-									{{ " - " }}
-								{% endif %}
-								{%- if jo.upper_range -%}
-									{{ frappe.format_value(frappe.utils.flt(jo.upper_range), currency=jo.currency) }}
-								{% endif %}
-								/
-								{{ jo.salary_per.lower() }}
-							</div>
-							{% endif %}
-						</div>
+						{%- if jo.employment_type -%}
+						{% set badge = "full" if jo.employment_type == "Full-time" else ("part" if jo.employment_type == "Part-time" else "other") %}
+						<span class="job-badge {{ badge }}">{{ jo.employment_type }}</span>
+						{%- endif -%}
 					</div>
 
-					<div class="px-4 py-2 job-card-footer mt-auto">
-						<div class="row text-12 text-secondary">
-							<p class="col-6 text-center mb-0 {{ 'border-right' if (jo.publish_applications_received or jo.closes_on) }}">
-								{%- if jo.publish_applications_received -%}
-									{{ _("Applications received:") + " " }}
-									<b>{{ jo.no_of_applications }}</b>
-								{% else %}
-									‎
-								{% endif %}
-							</p>
-							<p class="col-6 text-center mb-0">
-								{%- if jo.closes_on -%}
-									{{ _("Closes on:") + " " }}
-									<b>{{ frappe.utils.format_date(jo.closes_on, "d MMM, YYYY") }}</b>
-								{% endif %}
-							</p>
-						</div>
+					{%- set summary = frappe.utils.strip_html(jo.description or "") | trim -%}
+					{%- if summary %}
+					<p class="job-summary">{{ summary | truncate(150) }}</p>
+					{% endif %}
+
+					<div class="job-tags">
+						{%- if jo.location -%}
+						<span class="job-tag">
+							<svg viewBox="0 0 16 16" class="tag-icon"><g fill="none" stroke="currentColor" stroke-width="1.2"><path d="M11.467 3.458c1.958 1.957 1.958 5.088.027 7.02L7.97 14l-3.523-3.523a4.945 4.945 0 010-6.993l.026-.026a4.922 4.922 0 016.993 0z"/><path d="M7.971 8.259a1.305 1.305 0 100-2.61 1.305 1.305 0 000 2.61z"/></g></svg>
+							{{ jo.location }}
+						</span>
+						{% endif %}
+						{%- if jo.department -%}
+						<span class="job-tag">
+							<svg class="icon icon-sm tag-icon"><use href="#icon-branch"></use></svg>
+							{{ jo.department }}
+						</span>
+						{% endif %}
+						{%- if jo.publish_salary_range and (jo.lower_range or jo.upper_range) -%}
+						<span class="job-tag salary">
+							<svg class="icon icon-sm tag-icon"><use href="#icon-income"></use></svg>
+							{%- if jo.lower_range -%}{{ frappe.format_value(frappe.utils.flt(jo.lower_range), currency=jo.currency) }}{%- endif -%}
+							{%- if jo.lower_range and jo.upper_range %} – {% endif -%}
+							{%- if jo.upper_range -%}{{ frappe.format_value(frappe.utils.flt(jo.upper_range), currency=jo.currency) }}{%- endif -%}
+							&nbsp;/ {{ (jo.salary_per or "")|lower }}
+						</span>
+						{% endif %}
 					</div>
-				</div>
+
+					<div class="job-card-foot">
+						<div class="job-foot-info">
+							{%- if days_left is not none -%}
+								{%- if days_left < 0 -%}
+								<span class="closing">{{ _("Applications closed") }}</span>
+								{%- elif days_left <= 7 -%}
+								<span class="closing soon">
+									{{ _("Closes today") if days_left == 0 else (_("Closes in 1 day") if days_left == 1 else _("Closes in {0} days").format(days_left)) }}
+								</span>
+								{%- else -%}
+								<span class="closing">{{ _("Apply by") }} {{ frappe.utils.format_date(jo.closes_on, "d MMM yyyy") }}</span>
+								{%- endif -%}
+							{%- endif -%}
+							{%- if jo.publish_applications_received -%}
+							<span class="applicants">{{ jo.no_of_applications }} {{ _("applicant") if jo.no_of_applications == 1 else _("applicants") }}</span>
+							{%- endif -%}
+						</div>
+						<span class="job-cta">
+							{{ _("View & Apply") }}
+							<svg viewBox="0 0 16 16" class="cta-arrow"><path d="M3 8h9.5M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</span>
+					</div>
+				</article>
 			</div>
 			{% endfor %}
 		</div>
+		{% else %}
+		<div class="jobs-empty">
+			<div class="jobs-empty-icon">
+				<svg viewBox="0 0 24 24"><path d="M9 6V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1m-11 0h16a1 1 0 0 1 1 1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+			</div>
+			{% if total_openings %}
+			<h3>{{ _("No positions match your search") }}</h3>
+			<p>{{ _("Try another keyword or clear the filters to see all open positions.") }}</p>
+			<a name="clear-filters" class="jobs-empty-btn" role="button">{{ _("Show all positions") }}</a>
+			{% else %}
+			<h3>{{ _("No open positions right now") }}</h3>
+			<p>{{ _("We are not hiring for any role at the moment. Please check back soon.") }}</p>
+			{% endif %}
+		</div>
+		{% endif %}
 
 		<!-- Pagination -->
 		{%- if no_of_pages > 1 -%}
-		<div class="mb-4 flex">
-			<div
-				class="btn-group mx-auto border rounded"
-				role="group"
-				aria-label="Pagination"
-			>
+		<div class="jobs-pagination">
+			<div class="btn-group" role="group" aria-label="Pagination">
 				{% set page = frappe.form_dict.page %}
 				{% set page = '1' if (not page or page|int > no_of_pages or page|int < 1) else page %}
-				<button
-					id="previous"
-					class="btn btn-default border-right flex align-items-center bg-white"
-				>
-					<svg class="icon icon-sm" style="--icon-stroke: var(--gray-600)">
-						<use href="#icon-left"></use>
-					</svg>
+				<button id="previous" class="btn page-btn" aria-label="{{ _('Previous') }}">
+					<svg class="icon icon-sm"><use href="#icon-left"></use></svg>
 				</button>
-
-				<div class="flex bg-white">
-					{% set initial_page = 1 if page|int == 1 else ((page|int / 3 + 0.5) | round(method='floor')|int * 3 - 2) %}
-					{% set no_of_displayed_pages = 5 if no_of_pages - initial_page > 5 else no_of_pages - initial_page + 1 %}
-					{% for i in range(no_of_displayed_pages) %}
-						{% set pg = i + initial_page %}
-						<button
-							id="{{ pg }}"
-							name="pagination"
-							class="btn btn-default text-muted rounded-0"
-							style="background-color: {{ 'var(--gray-100)' if pg|string == page else 'white' }}"
-						>
-							{% if (loop.first and pg != 1) or (loop.last and pg != no_of_pages) %}
-							<span>...</span>
-							{% else %}
-							<span>{{ pg }}</span>
-							{% endif %}
-						</button>
-					{% endfor %}
-				</div>
-
-				<button
-					id="next"
-					class="btn btn-default border-left flex align-items-center bg-white"
-				>
-					<svg class="icon icon-sm" style="--icon-stroke: var(--gray-600)">
-						<use href="#icon-right"></use>
-					</svg>
+				{% set initial_page = 1 if page|int == 1 else ((page|int / 3 + 0.5) | round(method='floor')|int * 3 - 2) %}
+				{% set no_of_displayed_pages = 5 if no_of_pages - initial_page > 5 else no_of_pages - initial_page + 1 %}
+				{% for i in range(no_of_displayed_pages) %}
+					{% set pg = i + initial_page %}
+					<button id="{{ pg }}" name="pagination" class="btn page-btn {{ 'active' if pg|string == page }}">
+						{% if (loop.first and pg != 1) or (loop.last and pg != no_of_pages) %}…{% else %}{{ pg }}{% endif %}
+					</button>
+				{% endfor %}
+				<button id="next" class="btn page-btn" aria-label="{{ _('Next') }}">
+					<svg class="icon icon-sm"><use href="#icon-right"></use></svg>
 				</button>
 			</div>
 		</div>
@@ -304,56 +235,41 @@
 	</div>
 
 	<!-- Mobile Filters -->
-	<div
-		id="filters-drawer"
-		class="filters-drawer position-fixed bg-white w-100 d-lg-none"
-	>
+	<div id="filters-drawer" class="filters-drawer position-fixed bg-white w-100 d-lg-none">
 		<div class="flex align-items-center py-4 px-6 border-bottom">
 			<p class="text-18 font-weight-bold mb-0">{{ _("Filters") }}</p>
-			<div name="close-filters-drawer" class="ml-auto">
-				<svg class="icon icon-lg">
-					<use href="#icon-close"></use>
-				</svg>
+			<div name="close-filters-drawer" class="ml-auto" role="button">
+				<svg class="icon icon-lg"><use href="#icon-close"></use></svg>
 			</div>
 		</div>
 
 		<div class="px-6 pt-6 flex-grow-1 overflow-auto">
 			{% for name, values in all_filters.items() %}
-			<div class="mb-6">
-				<p class="font-weight-bold mb-4">
-					{{ name.title() | replace('_', ' ') }}
-				</p>
-
+			<div class="filter-group">
+				<p class="filter-title">{{ name.title() | replace('_', ' ') }}</p>
 				{% for value in values %}
-				<div class="form-group form-check">
+				<label class="filter-option" for="{{ 'mobile-' ~ value }}" role="button">
 					<input
 						id="{{ 'mobile-' ~ value }}"
 						name="{{ name }}"
 						value="{{ value }}"
-						class="form-check-input mobile-filters"
+						class="mobile-filters"
 						type="checkbox"
-						role="button"
 					/>
-					<label
-						class="form-check-label align-top"
-						for="{{ 'mobile-' ~ value }}"
-						role="button"
-					>
-						{{ value }}
-					</label>
-				</div>
+					<span class="filter-check"></span>
+					<span class="filter-text">{{ value }}</span>
+				</label>
 				{% endfor %}
 			</div>
 			{% endfor %}
 		</div>
 
 		<div class="flex align-items-center py-4 border-top">
-			<a name="clear-filters" class="text-17 text-center w-50 mx-6" role="button">{{ _("Clear All") }}</a>
-			<a id="apply-filters" class="btn btn-primary btn-lg w-50 mx-6">{{ _("Apply") }}</a>
+			<a name="clear-filters" class="text-17 text-center w-50 mx-6" role="button">{{ _("Clear all") }}</a>
+			<a id="apply-filters" class="btn btn-lg w-50 mx-6 jobs-apply-btn">{{ _("Apply") }}</a>
 		</div>
 	</div>
 
-	<div  id="overlay" name="close-filters-drawer" class="overlay d-lg-none"></div>
-
+	<div id="overlay" name="close-filters-drawer" class="overlay d-lg-none"></div>
 </div>
 {% endblock page_content %}

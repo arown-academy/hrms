@@ -120,7 +120,7 @@ export const EXPENSE_REQUEST_FIELDS = [
 	{ fieldname: "request_date", label: "Request Date", fieldtype: "Date" },
 	{ fieldname: "expense_category", label: "Expense Category", fieldtype: "Data" },
 	{ fieldname: "estimated_amount", label: "Estimated Amount", fieldtype: "Currency" },
-	{ fieldname: "expected_expense_date", label: "Expected Expense Date", fieldtype: "Date" },
+	{ fieldname: "expected_expense_date", label: "Expected Expense Approval Date", fieldtype: "Date" },
 	{ fieldname: "purpose", label: "Purpose", fieldtype: "Small Text" },
 	{ fieldname: "description", label: "More Details", fieldtype: "Small Text" },
 	{ fieldname: "from_place", label: "From Place", fieldtype: "Data" },
